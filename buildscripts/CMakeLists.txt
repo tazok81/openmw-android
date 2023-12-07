@@ -345,9 +345,9 @@ ExternalProject_Add(gl4es
 	URL_HASH ${GL4ES_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
-	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/shared-library.patch
-	COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/gamma.patch
-	COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/keyword-usage.patch
+	#PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/shared-library.patch
+	#COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/gamma.patch
+	#COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/keyword-usage.patch
 
 	CONFIGURE_COMMAND ""
 
@@ -356,6 +356,7 @@ ExternalProject_Add(gl4es
 
 	INSTALL_COMMAND mkdir -p ${prefix}/lib/
 	COMMAND cp libs/${app_abi}/libGL.so ${prefix}/lib/
+	COMMAND cp -r <SOURCE_DIR>/include ${prefix}/include/gl4es/
 	COMMAND cp -r <SOURCE_DIR>/include ${prefix}/
 )
 
@@ -367,11 +368,11 @@ ExternalProject_Add(mygui
 	URL_HASH ${MYGUI_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
-	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/mygui-dont-set-debug-postfix.patch
+	#PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/mygui-dont-set-debug-postfix.patch
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
-	-DMYGUI_RENDERSYSTEM=ON
+	-DMYGUI_RENDERSYSTEM=4
 	-DMYGUI_BUILD_DEMOS=OFF
 	-DMYGUI_BUILD_TOOLS=OFF
 	-DMYGUI_BUILD_PLUGINS=OFF
@@ -534,6 +535,8 @@ set(OSG_PATCH
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0004-IncrementalCompileOperation-wrap-some-stuff-in-atomi.patch &&
         #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-zlib-dependency.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/force-add-plugins.patch &&
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/dae_collada.patch &&
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/psa.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
 )
 
@@ -565,14 +568,25 @@ set(OPENMW_COMMON
 	-DBUILD_MWINIIMPORTER=0
 	-DBUILD_ESSIMPORTER=0
 	-DBUILD_OPENCS=0
+	-DBUILD_NAVMESHTOOL=0
 	-DBUILD_WIZARD=0
 	-DBUILD_MYGUI_PLUGIN=0
+	-DBUILD_BULLETOBJECTTOOL=0
+	-DOPENMW_USE_SYSTEM_SQLITE3=OFF
+	-DOPENMW_USE_SYSTEM_YAML_CPP=OFF
+	-DOPENMW_USE_SYSTEM_ICU=ON
+ 	#-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
+ 	#-DCMAKE_POLICY_DEFAULT_CMP0069=NEW
+	#-DOPENMW_LTO_BUILD=1
+	#-DOPENGL_opengl_LIBRARY=${prefix}/lib/libGL.so
+	#-DOPENGL_glx_LIBRARY=${prefix}/lib/libGL.so
+	#-DOPENGL_INCLUDE_DIR=${prefix}/include/gl4es/
+	#-DOPENMW_GL4ES_MANUAL_INIT=ON
 	-DOPENAL_INCLUDE_DIR=${prefix}/include/AL/
 	-DBullet_INCLUDE_DIR=${prefix}/include/bullet/
-	-DOPENGL_ES=OFF
-        -DOPENMW_USE_SYSTEM_ICU=ON
 	-DOSG_STATIC=TRUE
 	-DMyGUI_LIBRARY=${prefix}/lib/libMyGUIEngineStatic.a
+)
 )
 
 set(OPENMW_PATCH
