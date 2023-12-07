@@ -79,9 +79,9 @@ fi
 source ./include/version.sh
 
 if [ $ASAN = true ]; then
-	CFLAGS="$CFLAGS -fsanitize=address -fuse-ld=gold -fno-omit-frame-pointer"
-	CXXFLAGS="$CXXFLAGS -fsanitize=address -fuse-ld=gold -fno-omit-frame-pointer"
-	LDFLAGS="$LDFLAGS -fsanitize=address -fuse-ld=gold -fno-omit-frame-pointer"
+	CFLAGS="$CFLAGS -fsanitize=address -fuse-ld=lld -fno-omit-frame-pointer"
+	CXXFLAGS="$CXXFLAGS -fsanitize=address -fuse-ld=lld -fno-omit-frame-pointer"
+	LDFLAGS="$LDFLAGS -fsanitize=address -fuse-ld=lld -fno-omit-frame-pointer"
 fi
 
 if [ $BUILD_TYPE = "release" ]; then
@@ -96,7 +96,7 @@ if [[ $LTO = "true" ]]; then
 	CFLAGS="$CFLAGS -flto"
 	CXXFLAGS="$CXXFLAGS -flto"
 	# emulated-tls should not be needed in ndk r18 https://github.com/android-ndk/ndk/issues/498#issuecomment-327825754
-	LDFLAGS="$LDFLAGS -flto -Wl,-plugin-opt=-emulated-tls -fuse-ld=gold"
+	LDFLAGS="$LDFLAGS -flto -Wl,-plugin-opt=-emulated-tls -fuse-ld=lld"
 fi
 
 if [[ $ARCH = "arm" ]]; then
