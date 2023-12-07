@@ -268,7 +268,7 @@ ExternalProject_Add(ffmpeg
 	${ffmpeg_configure_flags}
 	--target-os=android
 	--enable-cross-compile
-	--cross-prefix=${host}-
+	--cross-prefix=llvm-
 	--cc=${host}-clang
 	--arch=${ARCH}
 	--cpu=${FFMPEG_CPU}
@@ -404,7 +404,7 @@ set(LUAJIT_MAKE_FLAGS
 	HOST_CC=${LUAJIT_HOST_CC}
 	CFLAGS=
 	TARGET_CFLAGS=$ENV{CFLAGS}
-	CROSS=${host}-
+	CROSS=llvm-
 	STATIC_CC=${host}-clang
 	DYNAMIC_CC=${host}-clang\ -fPIC
 	TARGET_LD=${host}-clang
@@ -412,8 +412,8 @@ set(LUAJIT_MAKE_FLAGS
 )
 
 ExternalProject_Add(luajit
-	URL https://luajit.org/download/LuaJIT-${LUAJIT_VERSION}.tar.gz
-	URL_HASH ${LUAJIT_HASH}
+	URL https://github.com/luaJit/LuaJIT/archive/${LUAJIT_VERSION}.tar.gz
+#	URL_HASH ${LUAJIT_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
 	BUILD_IN_SOURCE 1
@@ -506,6 +506,8 @@ set(OSG_COMMON
 	-DJPEG_INCLUDE_DIR=${prefix}/include/
 	-DPNG_INCLUDE_DIR=${prefix}/include/
 	-DFREETYPE_DIR=${prefix}
+        -DCOLLADA_INCLUDE_DIR=${prefix}/include/collada-dom2.5
+        -DCOLLADA_DIR=${prefix}/include/collada-dom2.5/1.4
 	-DOSG_CPP_EXCEPTIONS_AVAILABLE=TRUE
 	-DOSG_GL1_AVAILABLE=ON
 	-DOSG_GL2_AVAILABLE=OFF
@@ -530,6 +532,8 @@ set(OSG_PATCH
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0001-Replace-Atomic-impl-with-std-atomic.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0002-BufferObject-make-numClients-atomic.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0004-IncrementalCompileOperation-wrap-some-stuff-in-atomi.patch &&
+        #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-zlib-dependency.patch &&
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/force-add-plugins.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
 )
 
@@ -566,6 +570,7 @@ set(OPENMW_COMMON
 	-DOPENAL_INCLUDE_DIR=${prefix}/include/AL/
 	-DBullet_INCLUDE_DIR=${prefix}/include/bullet/
 	-DOPENGL_ES=OFF
+        -DOPENMW_USE_SYSTEM_ICU=ON
 	-DOSG_STATIC=TRUE
 	-DMyGUI_LIBRARY=${prefix}/lib/libMyGUIEngineStatic.a
 )
@@ -573,17 +578,18 @@ set(OPENMW_COMMON
 set(OPENMW_PATCH
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/gamma.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0001-loadingscreen-disable-for-now.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0009-windowmanagerimp-always-show-mouse-when-possible-pat.patch &&
-    patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0010-android-fix-context-being-lost-on-app-minimize.patch &&
+        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0009-windowmanagerimp-always-show-mouse-when-possible-pat.patch &&
+        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0010-android-fix-context-being-lost-on-app-minimize.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0014-settingswindow-save-user-settings-file-when-ok-is-pr.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0012-components-misc-stringops-use-boost-format-instead-o.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/fix-build.patch &&
+        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/psa.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/refraction-fix.patch &&
 	cp ${CMAKE_SOURCE_DIR}/patches/openmw/android_main.cpp <SOURCE_DIR>/apps/openmw/android_main.cpp
 )
 
 ExternalProject_Add(openmw
-	DEPENDS boost openal osg mygui ffmpeg sdl2 bullet lz4 luajit
+	DEPENDS boost openal osg mygui ffmpeg sdl2 bullet lz4 luajit libicu
 
 	URL https://github.com/OpenMW/openmw/archive/${OPENMW_VERSION}.tar.gz
 	URL_HASH ${OPENMW_HASH}
