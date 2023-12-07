@@ -16,25 +16,25 @@ set(FREETYPE2_HASH SHA256=5eab795ebb23ac77001cfb68b7d4d50b5d6c7469247b0b01b2c953
 set(OPENAL_VERSION 1.21.1)
 set(OPENAL_HASH SHA256=8ac17e4e3b32c1af3d5508acfffb838640669b4274606b7892aa796ca9d7467f)
 
-# http://www.boost.org/users/download/
-set(BOOST_VERSION 1.69.0)
-set(BOOST_HASH SHA256=8f32d4617390d1c2d16f26a27ab60d97807b35440d45891fa340fc2648b04406)
+# https://www.boost.org/users/download/#live
+set(BOOST_VERSION 1.83.0)
+set(BOOST_HASH SHA256=6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e)
 
 # https://www.ffmpeg.org/download.html
 set(FFMPEG_VERSION 4.4)
 set(FFMPEG_HASH SHA256=42093549751b582cf0f338a21a3664f52e0a9fbe0d238d3c992005e493607d0e)
 
 # https://www.libsdl.org/download-2.0.php
-set(SDL2_VERSION 2.0.12)
-set(SDL2_HASH SHA256=349268f695c02efbc9b9148a70b85e58cefbbf704abd3e91be654db7f1e2c863)
+set(SDL2_VERSION 2.0.22)
+#set(SDL2_HASH SHA256=349268f695c02efbc9b9148a70b85e58cefbbf704abd3e91be654db7f1e2c863)
 
 # https://github.com/bulletphysics/bullet3/releases
 set(BULLET_VERSION 3.17)
 set(BULLET_HASH SHA256=baa642c906576d4d98d041d0acb80d85dd6eff6e3c16a009b1abf1ccd2bc0a61)
 
-# https://github.com/MyGUI/mygui/releases
-set(MYGUI_VERSION 3.4.0)
-set(MYGUI_HASH SHA256=d1d5f294670ae71f7200ed4b30859018281d8cfd45d6a38d18b97a4aba604c42)
+#https://github.com/MyGUI/mygui/releases
+set(MYGUI_VERSION 3.4.1)
+set(MYGUI_HASH SHA256=bdf730bdeb4ad89e6b8223967db01aa5274d2b93adc2c0d6aa4842faeed4de1a)
 
 # https://github.com/ptitSeb/gl4es/releases
 set(GL4ES_VERSION v1.1.4)
@@ -55,6 +55,10 @@ set(LUAJIT_HASH SHA256=1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e
 # https://github.com/OpenMW/openmw/commits/master
 set(OPENMW_VERSION 1644430bc08aa537621b21bf7bfb1f5c0f3a9d92)
 set(OPENMW_HASH SHA256=8ce70ffabcc03dba33fe955b273ae6a6afe3ae054797261f38781a869a0e04ec)
+
+# https://github.com/unicode-org/icu/
+set(LIBICU_VERSION 70-1)
+set(LIBICU_HASH SHA256=4013d7aff8a34bae410664bdb16554d7eda03654b22627b9284ab55a685492d4)
 
 # End of configurable options
 
@@ -142,6 +146,27 @@ ExternalProject_Add(libjpeg-turbo
 	INSTALL_COMMAND ${wrapper_command} $(MAKE) install-libLTLIBRARIES install-data-am
 )
 
+set(libicu_flags
+	--disable-tests
+	--disable-samples
+	--disable-icuio
+	--disable-extras
+	--with-cross-build=${CMAKE_SOURCE_DIR}/build/icu-host-build)
+
+ExternalProject_Add(libicu
+	URL https://github.com/unicode-org/icu/archive/refs/tags/release-${LIBICU_VERSION}.zip
+	URL_HASH ${LIBICU_HASH}
+	DOWNLOAD_DIR ${download_dir}
+
+	CONFIGURE_COMMAND ${wrapper_command} <SOURCE_DIR>/icu4c/source/configure
+	${COMMON_AUTOCONF_FLAGS}
+	${libicu_flags}
+
+	BUILD_COMMAND ${wrapper_command} $(MAKE) check_PROGRAMS= bin_PROGRAMS=
+
+	INSTALL_COMMAND ${wrapper_command} $(MAKE) install check_PROGRAMS= bin_PROGRAMS=
+)
+
 ExternalProject_Add(libpng
 	URL http://prdownloads.sourceforge.net/libpng/libpng-${LIBPNG_VERSION}.tar.xz
 	https://github.com/xyzz/openmw-deps/releases/download/v0/libpng-${LIBPNG_VERSION}.tar.xz
@@ -193,41 +218,44 @@ ExternalProject_Add(openal
 
 string(REPLACE "." "_" BOOST_VERSION_UNDERSCORE ${BOOST_VERSION})
 ExternalProject_Add(boost
-	URL https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2
+        URL https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2
 	https://github.com/xyzz/openmw-deps/releases/download/v0/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2
 	URL_HASH ${BOOST_HASH}
 	DOWNLOAD_DIR ${download_dir}
+	
+	
+BUILD_IN_SOURCE 1
 
-	BUILD_IN_SOURCE 1
+    CONFIGURE_COMMAND ${wrapper_command} <SOURCE_DIR>/bootstrap.sh
+    --prefix=${prefix}
 
-	CONFIGURE_COMMAND ${wrapper_command} <SOURCE_DIR>/bootstrap.sh
-	--prefix=${prefix}
+    BUILD_COMMAND ""
 
-	BUILD_COMMAND ""
-
-	INSTALL_COMMAND ${wrapper_command} ./b2
-	-j4
-	--with-filesystem
-	--with-program_options
-	--with-system
-	--with-iostreams
-	--ignore-site-config
-	toolset=clang-android
-	architecture=${BOOST_ARCH}
-	address-model=${BOOST_ADDRESS_MODEL}
-	cflags=$ENV{CFLAGS}
-	cxxflags=$ENV{CXXFLAGS}
-	variant=release
-	target-os=android
-	threading=multi
-	threadapi=pthread
-	link=static
-	runtime-link=static
-	install
-	COMMAND ${host}-ranlib ${prefix}/lib/libboost_filesystem.a
-	COMMAND ${host}-ranlib ${prefix}/lib/libboost_program_options.a
-	COMMAND ${host}-ranlib ${prefix}/lib/libboost_system.a
-	COMMAND ${host}-ranlib ${prefix}/lib/libboost_iostreams.a
+    INSTALL_COMMAND ${wrapper_command} ./b2
+    -j4
+    --with-filesystem
+    --with-program_options
+    --with-system
+    --with-iostreams
+    --with-regex
+    --ignore-site-config
+    toolset=clang
+    architecture=${BOOST_ARCH}
+    address-model=${BOOST_ADDRESS_MODEL}
+    cflags=$ENV{CFLAGS}
+    cxxflags=$ENV{CXXFLAGS}
+    variant=release
+    target-os=android
+    threading=multi
+    threadapi=pthread
+    link=static
+    runtime-link=static
+    install
+    COMMAND llvm-ranlib ${prefix}/lib/libboost_filesystem.a
+    COMMAND llvm-ranlib ${prefix}/lib/libboost_program_options.a
+    COMMAND llvm-ranlib ${prefix}/lib/libboost_system.a
+    COMMAND llvm-ranlib ${prefix}/lib/libboost_iostreams.a
+    COMMAND llvm-ranlib ${prefix}/lib/libboost_regex.a
 )
 
 ExternalProject_Add(ffmpeg
@@ -277,7 +305,8 @@ ExternalProject_Add(sdl2
 	URL_HASH ${SDL2_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
-	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/sdl2-android-120hz-gyroscope.patch
+#	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/sdl2-android-120hz-gyroscope.patch
+#	COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/sdl2-disable-gamma-warning.patch
 
 	CONFIGURE_COMMAND ""
 
@@ -286,7 +315,6 @@ ExternalProject_Add(sdl2
 
 	INSTALL_COMMAND mkdir -p ${prefix}/lib/
 	COMMAND cp libs/${app_abi}/libSDL2.so ${prefix}/lib/
-	COMMAND cp libs/${app_abi}/libhidapi.so ${prefix}/lib/
 	COMMAND cp -r <SOURCE_DIR>/include ${prefix}/
 )
 
@@ -398,6 +426,70 @@ ExternalProject_Add(luajit
 	INSTALL_COMMAND ${wrapper_command} $(MAKE) install
 	${LUAJIT_MAKE_FLAGS}
 	COMMAND bash -c "rm ${prefix}/lib/libluajit*.so*"
+)
+
+ExternalProject_Add(zlib
+	URL https://github.com/madler/zlib/releases/download/v1.3/zlib-1.3.tar.gz
+	URL_HASH SHA256=ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e
+	DOWNLOAD_DIR ${download_dir}
+
+	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
+	${COMMON_CMAKE_ARGS}
+
+	BUILD_COMMAND ${wrapper_command} $(MAKE)
+	INSTALL_COMMAND ${wrapper_command} $(MAKE) install
+)
+
+ExternalProject_Add(libxml
+	DEPENDS zlib
+
+	URL https://github.com/GNOME/libxml2/archive/refs/tags/v2.12.2.tar.gz
+	URL_HASH SHA256=0ae29f4bad60d9d65fe6e6b8bc96147b743f9075b63c13d4aeb0391c0046c442
+	DOWNLOAD_DIR ${download_dir}
+
+	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
+	${COMMON_CMAKE_ARGS}
+	-DBUILD_SHARED_LIBS=OFF
+	-DLIBXML2_WITH_CATALOG=OFF
+	-DLIBXML2_WITH_ICONV=OFF
+	-DLIBXML2_WITH_LZMA=OFF
+	-DLIBXML2_WITH_PROGRAMS=OFF
+	-DLIBXML2_WITH_PYTHON=OFF
+	-DLIBXML2_WITH_TESTS=OFF
+	-DLIBXML2_WITH_ZLIB=ON
+
+	BUILD_COMMAND ${wrapper_command} $(MAKE)
+
+	INSTALL_COMMAND ${wrapper_command} $(MAKE) install
+)
+
+set(LIBCOLLADA_PATCH patch -d <SOURCE_DIR> -p0 -t -N < ${CMAKE_SOURCE_DIR}/patches/libcollada-minizip-fix.patch)
+
+ExternalProject_Add(libcollada
+	DEPENDS libxml boost
+
+	URL https://github.com/rdiankov/collada-dom/archive/v2.5.0.tar.gz
+	URL_HASH SHA256=3be672407a7aef60b64ce4b39704b32816b0b28f61ebffd4fbd02c8012901e0d
+	DOWNLOAD_DIR ${download_dir}
+
+	PATCH_COMMAND ${LIBCOLLADA_PATCH}
+
+	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
+	${COMMON_CMAKE_ARGS}
+	-DBoost_USE_STATIC_LIBS=ON
+	-DBoost_USE_STATIC_RUNTIME=ON
+	-DBoost_NO_SYSTEM_PATHS=ON
+	-DBoost_INCLUDE_DIR=${prefix}/include
+	-D CMAKE_CXX_FLAGS=--Dauto_ptr=unique_ptr
+	-DHAVE_STRTOQ=0
+	-DUSE_FILE32API=1
+	-D CMAKE_CXX_FLAGS=--std=gnu++11
+	
+
+	BUILD_COMMAND ${wrapper_command} $(MAKE) 
+   
+
+	INSTALL_COMMAND ${wrapper_command} $(MAKE) install
 )
 
 set(OSG_COMMON
