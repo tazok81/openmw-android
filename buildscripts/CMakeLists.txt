@@ -489,7 +489,7 @@ ExternalProject_Add(libcollada
 	-D CMAKE_CXX_FLAGS=--Dauto_ptr=unique_ptr
 	-DHAVE_STRTOQ=0
 	-DUSE_FILE32API=1
-	-D CMAKE_CXX_FLAGS=--std=gnu++11
+	-D CMAKE_CXX_FLAGS=-std=c++11
 	
 
 	BUILD_COMMAND ${wrapper_command} $(MAKE) 
@@ -502,6 +502,7 @@ set(OSG_COMMON
 	-DOPENGL_PROFILE="GL1"
 	-DDYNAMIC_OPENTHREADS=OFF
 	-DDYNAMIC_OPENSCENEGRAPH=OFF
+	-D CMAKE_CXX_FLAGS=-std=c++11
 	-DBUILD_OSG_PLUGIN_OSG=ON
 	-DBUILD_OSG_PLUGIN_DDS=ON
 	-DBUILD_OSG_PLUGIN_TGA=ON
@@ -512,8 +513,8 @@ set(OSG_COMMON
 	-DJPEG_INCLUDE_DIR=${prefix}/include/
 	-DPNG_INCLUDE_DIR=${prefix}/include/
 	-DFREETYPE_DIR=${prefix}
-        -DCOLLADA_INCLUDE_DIR=${prefix}/include/collada-dom2.5
-        -DCOLLADA_DIR=${prefix}/include/collada-dom2.5/1.4
+ -DCOLLADA_INCLUDE_DIR=${prefix}/include/collada-dom2.5
+ -DCOLLADA_DIR=${prefix}/include/collada-dom2.5/1.4
 	-DOSG_CPP_EXCEPTIONS_AVAILABLE=TRUE
 	-DOSG_GL1_AVAILABLE=ON
 	-DOSG_GL2_AVAILABLE=OFF
