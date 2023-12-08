@@ -35,7 +35,11 @@ pushd toolchain
 if [[ ! -d $ARCH ]]; then
 	echo "==> Making standalone toolchain for architecture $ARCH"
 
-	$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi26-clang++
+	./ndk/build/tools/make_standalone_toolchain.py \
+		--arch $ARCH \
+		--api $ANDROID_API \
+		--stl libc++ \
+		--install-dir ./$ARCH
 
 	# Patch it to ensure gcc is never ever never used
 	rm -f $ARCH/bin/$NDK_TRIPLET-gcc
