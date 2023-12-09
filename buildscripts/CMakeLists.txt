@@ -484,15 +484,28 @@ ExternalProject_Add(libcollada
 #	PATCH_COMMAND ${LIBCOLLADA_PATCH}
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
-	${COMMON_CMAKE_ARGS}
-	-DBoost_USE_STATIC_LIBS=ON
+	
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_SOURCE_DIR}/toolchain/ndk/build/cmake/android.toolchain.cmake
+        -DANDROID_ABI=${app_abi}
+        -DANDROID_PLATFORM=${android_platform}
+        -DANDROID_STL=c++_shared
+        -DANDROID_LD=deprecated
+        -DANDROID_CPP_FEATURES=rtti\ exceptions
+        -DANDROID_ALLOW_UNDEFINED_VERSION_SCRIPT_SYMBOLS=ON
+	-DCMAKE_CXX_FLAGS=-std=gnu++11
+        -DCMAKE_C_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/${ARCH}/include/\ $ENV{CFLAGS}
+        -DCMAKE_CXX_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/${ARCH}/include/\ $ENV{CXXFLAGS}
+        -DCMAKE_SHARED_LINKER_FLAGS=$ENV{LDFLAGS}
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+        -DCMAKE_DEBUG_POSTFIX=
+        -DCMAKE_INSTALL_PREFIX=${prefix}
+        -DCMAKE_FIND_ROOT_PATH=${prefix}	-DBoost_USE_STATIC_LIBS=ON
 	-DBoost_USE_STATIC_RUNTIME=ON
 	-DBoost_NO_SYSTEM_PATHS=ON
 	-DBoost_INCLUDE_DIR=${prefix}/include
 	-DCMAKE_CXX_FLAGS=-Dauto_ptr=unique_ptr
 	-DHAVE_STRTOQ=0
 	-DUSE_FILE32API=1
-	-DCMAKE_CXX_FLAGS=-std=c++11
 	
 
 	BUILD_COMMAND ${wrapper_command} $(MAKE) 
@@ -502,6 +515,27 @@ ExternalProject_Add(libcollada
 )
 
 set(OSG_COMMON
+    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_SOURCE_DIR}/toolchain/ndk/build/cmake/android.toolchain.cmake
+        -DANDROID_ABI=${app_abi}
+        -DANDROID_PLATFORM=${android_platform}
+        -DANDROID_STL=c++_shared
+        -DANDROID_LD=deprecated
+        -DANDROID_CPP_FEATURES=rtti\ exceptions
+        -DANDROID_ALLOW_UNDEFINED_VERSION_SCRIPT_SYMBOLS=ON
+	-DCMAKE_CXX_FLAGS=-std=gnu++11
+        -DCMAKE_C_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/${ARCH}/include/\ $ENV{CFLAGS}
+        -DCMAKE_CXX_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/${ARCH}/include/\ $ENV{CXXFLAGS}
+        -DCMAKE_SHARED_LINKER_FLAGS=$ENV{LDFLAGS}
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+        -DCMAKE_DEBUG_POSTFIX=
+        -DCMAKE_INSTALL_PREFIX=${prefix}
+        -DCMAKE_FIND_ROOT_PATH=${prefix}	-DBoost_USE_STATIC_LIBS=ON
+	-DBoost_USE_STATIC_RUNTIME=ON
+	-DBoost_NO_SYSTEM_PATHS=ON
+	-DBoost_INCLUDE_DIR=${prefix}/include
+	-DCMAKE_CXX_FLAGS=-Dauto_ptr=unique_ptr
+	-DHAVE_STRTOQ=0
+	-DUSE_FILE32API=1
 	-DOPENGL_PROFILE="GL1"
 	-DDYNAMIC_OPENTHREADS=OFF
 	-DDYNAMIC_OPENSCENEGRAPH=OFF
