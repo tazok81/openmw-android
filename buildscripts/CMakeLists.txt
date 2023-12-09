@@ -364,6 +364,7 @@ ExternalProject_Add(gl4es
 	INSTALL_COMMAND mkdir -p ${prefix}/lib/
 	COMMAND cp libs/${app_abi}/libGL.so ${prefix}/lib/
 	COMMAND cp -r <SOURCE_DIR>/include ${prefix}/
+ COMMAND cp -r <SOURCE_DIR>/include ${prefix}/include/gl4es/
 )
 
 ExternalProject_Add(mygui
