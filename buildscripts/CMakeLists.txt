@@ -37,7 +37,7 @@ set(MYGUI_VERSION 3.4.1)
 set(MYGUI_HASH SHA256=bdf730bdeb4ad89e6b8223967db01aa5274d2b93adc2c0d6aa4842faeed4de1a)
 
 # https://github.com/ptitSeb/gl4es/releases
-set(GL4ES_VERSION v1.1.4)
+set(GL4ES_VERSION v1.0)
 set(GL4ES_HASH SHA256=b565e717c7d192e936bda25f3cb90ad8db398af56414ec08294b6716574c1a6d)
 
 # https://github.com/openscenegraph/OpenSceneGraph/releases
@@ -53,7 +53,7 @@ set(LUAJIT_VERSION v2.1.0-beta3)
 set(LUAJIT_HASH SHA256=1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3)
 
 # https://github.com/OpenMW/openmw/commits/master
-set(OPENMW_VERSION 1644430bc08aa537621b21bf7bfb1f5c0f3a9d92)
+set(OPENMW_VERSION 1a39ef07c86ca0c4bb6d1999becb8b478ee3ee24)
 set(OPENMW_HASH SHA256=8ce70ffabcc03dba33fe955b273ae6a6afe3ae054797261f38781a869a0e04ec)
 
 # https://github.com/unicode-org/icu/
@@ -82,13 +82,14 @@ set(COMMON_CMAKE_ARGS
 	-DANDROID_LD=deprecated
 	-DANDROID_CPP_FEATURES=rtti\ exceptions
 	-DANDROID_ALLOW_UNDEFINED_VERSION_SCRIPT_SYMBOLS=ON
-	-DCMAKE_C_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/include/\ $ENV{CFLAGS}
-	-DCMAKE_CXX_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/include/\ $ENV{CXXFLAGS}
+	-DCMAKE_C_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/${ARCH}/include/\ $ENV{CFLAGS}
+	-DCMAKE_CXX_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/${ARCH}/include/\ $ENV{CXXFLAGS}
 	-DCMAKE_SHARED_LINKER_FLAGS=$ENV{LDFLAGS}
 	-DCMAKE_BUILD_TYPE=${BUILD_TYPE}
 	-DCMAKE_DEBUG_POSTFIX=
 	-DCMAKE_INSTALL_PREFIX=${prefix}
 	-DCMAKE_FIND_ROOT_PATH=${prefix}
+
 
 )
 
@@ -330,6 +331,7 @@ ExternalProject_Add(bullet
 	DOWNLOAD_DIR ${download_dir}
 
 	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/bullet-fix-cmake.patch
+	#PATCH_COMMAND patch -p0 --forward <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/bullet-fix-cmake.patch || true
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
@@ -345,14 +347,14 @@ ExternalProject_Add(bullet
 )
 
 ExternalProject_Add(gl4es
-	URL https://github.com/ptitSeb/gl4es/archive/${GL4ES_VERSION}.tar.gz
+	URL https://github.com/Duron27/gl4es/archive/refs/tags/${GL4ES_VERSION}.tar.gz
 	https://github.com/xyzz/openmw-deps/releases/download/v0/gl4es-${GL4ES_VERSION}.gz
-	URL_HASH ${GL4ES_HASH}
+	#URL_HASH ${GL4ES_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
 	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/shared-library.patch
-	COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/gamma.patch
-	COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/keyword-usage.patch
+#	COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/gamma.patch
+#	COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/keyword-usage.patch
 
 	CONFIGURE_COMMAND ""
 
@@ -369,10 +371,11 @@ ExternalProject_Add(mygui
 
 	URL https://github.com/MyGUI/mygui/archive/MyGUI${MYGUI_VERSION}.tar.gz
 	https://github.com/xyzz/openmw-deps/releases/download/v0/MyGUI${MYGUI_VERSION}.tar.gz
-	URL_HASH ${MYGUI_HASH}
+	#URL_HASH ${MYGUI_HASH}
 	DOWNLOAD_DIR ${download_dir}
-
-	#PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/mygui-dont-set-debug-postfix.patch
+	
+        
+#	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/mygui-dont-set-debug-postfix.patch
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
@@ -477,7 +480,7 @@ ExternalProject_Add(libcollada
 	URL_HASH SHA256=3be672407a7aef60b64ce4b39704b32816b0b28f61ebffd4fbd02c8012901e0d
 	DOWNLOAD_DIR ${download_dir}
 
-	PATCH_COMMAND ${LIBCOLLADA_PATCH}
+#	PATCH_COMMAND ${LIBCOLLADA_PATCH}
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
@@ -485,10 +488,10 @@ ExternalProject_Add(libcollada
 	-DBoost_USE_STATIC_RUNTIME=ON
 	-DBoost_NO_SYSTEM_PATHS=ON
 	-DBoost_INCLUDE_DIR=${prefix}/include
-	-D CMAKE_CXX_FLAGS=--Dauto_ptr=unique_ptr
+	-DCMAKE_CXX_FLAGS=-Dauto_ptr=unique_ptr
 	-DHAVE_STRTOQ=0
 	-DUSE_FILE32API=1
-	-D CMAKE_CXX_FLAGS=-std=c++11
+	-DCMAKE_CXX_FLAGS=-std=c++11
 	
 
 	BUILD_COMMAND ${wrapper_command} $(MAKE) 
@@ -501,7 +504,7 @@ set(OSG_COMMON
 	-DOPENGL_PROFILE="GL1"
 	-DDYNAMIC_OPENTHREADS=OFF
 	-DDYNAMIC_OPENSCENEGRAPH=OFF
-	-D CMAKE_CXX_FLAGS=-std=c++11
+	-DCMAKE_CXX_FLAGS=-std=c++11
 	-DBUILD_OSG_PLUGIN_OSG=ON
 	-DBUILD_OSG_PLUGIN_DDS=ON
 	-DBUILD_OSG_PLUGIN_TGA=ON
@@ -511,9 +514,11 @@ set(OSG_COMMON
 	-DBUILD_OSG_PLUGIN_FREETYPE=ON
 	-DJPEG_INCLUDE_DIR=${prefix}/include/
 	-DPNG_INCLUDE_DIR=${prefix}/include/
-	-DFREETYPE_DIR=${prefix}
- -DCOLLADA_INCLUDE_DIR=${prefix}/include/collada-dom2.5
- -DCOLLADA_DIR=${prefix}/include/collada-dom2.5/1.4
+	-DFREETYPE_DIR=${prefix}/
+	-DFREETYPE_INCLUDE_DIR=${prefix}/include/freetype2/
+        -DCOLLADA_INCLUDE_DIR=${prefix}/include/collada-dom2.5/
+        -DCOLLADA_DIR=${prefix}/include/collada-dom2.5/1.4/
+        -DOPENGL_INCLUDE_DIR=${prefix}/include/
 	-DOSG_CPP_EXCEPTIONS_AVAILABLE=TRUE
 	-DOSG_GL1_AVAILABLE=ON
 	-DOSG_GL2_AVAILABLE=OFF
@@ -532,8 +537,8 @@ set(OSG_COMMON
 )
 
 set(OSG_PATCH
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/disable-polygon-offset.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-lib-prefix-from-plugins.patch &&
+	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/disable-polygon-offset.patch &&
+#	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-lib-prefix-from-plugins.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/fix-freetype-include-dirs.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0001-Replace-Atomic-impl-with-std-atomic.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0002-BufferObject-make-numClients-atomic.patch &&
@@ -542,7 +547,7 @@ set(OSG_PATCH
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/force-add-plugins.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/dae_collada.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/psa.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
+	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
 )
 
 ExternalProject_Add(osg
@@ -610,7 +615,7 @@ ExternalProject_Add(openmw
 	DEPENDS boost openal osg mygui ffmpeg sdl2 bullet lz4 luajit libicu
 
 	URL https://github.com/OpenMW/openmw/archive/${OPENMW_VERSION}.tar.gz
-	URL_HASH ${OPENMW_HASH}
+	#URL_HASH ${OPENMW_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
 	PATCH_COMMAND ${OPENMW_PATCH}
