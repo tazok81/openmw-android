@@ -364,7 +364,7 @@ ExternalProject_Add(gl4es
 	INSTALL_COMMAND mkdir -p ${prefix}/lib/
 	COMMAND cp libs/${app_abi}/libGL.so ${prefix}/lib/
 	COMMAND cp -r <SOURCE_DIR>/include ${prefix}/
- COMMAND cp -r <SOURCE_DIR>/include ${prefix}/include/gl4es/
+    COMMAND cp -r <SOURCE_DIR>/include ${prefix}/include/gl4es/
 )
 
 ExternalProject_Add(mygui
@@ -481,11 +481,9 @@ ExternalProject_Add(libcollada
 	URL_HASH SHA256=3be672407a7aef60b64ce4b39704b32816b0b28f61ebffd4fbd02c8012901e0d
 	DOWNLOAD_DIR ${download_dir}
 
- PATCH_COMMAND ${LIBCOLLADA_PATCH}
+#	PATCH_COMMAND ${LIBCOLLADA_PATCH}
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
-	
-	-DCMAKE_TOOLCHAIN_FILE=${CMAKE_SOURCE_DIR}/toolchain/ndk/build/cmake/android.toolchain.cmake
 	${COMMON_CMAKE_ARGS}
 	-DBoost_USE_STATIC_LIBS=ON
 	-DBoost_USE_STATIC_RUNTIME=ON
@@ -494,7 +492,7 @@ ExternalProject_Add(libcollada
 	-DCMAKE_CXX_FLAGS=-Dauto_ptr=unique_ptr
 	-DHAVE_STRTOQ=0
 	-DUSE_FILE32API=1
-	-DCMAKE_CXX_FLAGS=-std=gnu++11
+	-DCMAKE_CXX_FLAGS=-std=c++11
 	
 
 	BUILD_COMMAND ${wrapper_command} $(MAKE) 
@@ -507,11 +505,11 @@ set(OSG_COMMON
 	-DOPENGL_PROFILE="GL1"
 	-DDYNAMIC_OPENTHREADS=OFF
 	-DDYNAMIC_OPENSCENEGRAPH=OFF
-	-DCMAKE_CXX_FLAGS=-std=gnu++11
+	-DCMAKE_CXX_FLAGS=-std=c++11
 	-DBUILD_OSG_PLUGIN_OSG=ON
 	-DBUILD_OSG_PLUGIN_DDS=ON
- -DBUILD_OSG_PLUGIN_DAE=ON
 	-DBUILD_OSG_PLUGIN_TGA=ON
+		-DBUILD_OSG_PLUGIN_DAE=ON
 	-DBUILD_OSG_PLUGIN_BMP=ON
 	-DBUILD_OSG_PLUGIN_JPEG=ON
 	-DBUILD_OSG_PLUGIN_PNG=ON
@@ -538,14 +536,14 @@ set(OSG_COMMON
 	-DBUILD_OSG_APPLICATIONS=OFF
 	-DBUILD_OSG_PLUGINS_BY_DEFAULT=OFF
 	-DBUILD_OSG_DEPRECATED_SERIALIZERS=OFF
- -DOPENGL_opengl_LIBRARY=${prefix}/lib/libGL.so
- -DOPENGL_glx_LIBRARY=${prefix}/lib/libGL.so
- -DOPENGL_INCLUDE_DIR=${prefix}/include/gl4es/
+-DOPENGL_opengl_LIBRARY=${prefix}/lib/libGL.so
+-DOPENGL_glx_LIBRARY=${prefix}/lib/libGL.so
+-DOPENGL_INCLUDE_DIR=${prefix}/include/gl4es/
 )
 
 set(OSG_PATCH
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/disable-polygon-offset.patch &&
- patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-lib-prefix-from-plugins.patch &&
+	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/disable-polygon-offset.patch &&
+#	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-lib-prefix-from-plugins.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/fix-freetype-include-dirs.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0001-Replace-Atomic-impl-with-std-atomic.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0002-BufferObject-make-numClients-atomic.patch &&
@@ -554,7 +552,7 @@ set(OSG_PATCH
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/force-add-plugins.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/dae_collada.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/psa.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
+	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
 )
 
 ExternalProject_Add(osg
@@ -565,33 +563,17 @@ ExternalProject_Add(osg
 	URL_HASH ${OSG_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
-	PATCH_COMMAND ${OSG_PATCH}
+#	PATCH_COMMAND ${OSG_PATCH}
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
-	
-	-DCMAKE_TOOLCHAIN_FILE=${CMAKE_SOURCE_DIR}/toolchain/ndk/build/cmake/android.toolchain.cmake
-	-DANDROID_ABI=${app_abi}
-	-DANDROID_PLATFORM=${android_platform}
-	-DANDROID_STL=c++_shared
-	-DANDROID_LD=deprecated
-	-DANDROID_CPP_FEATURES=rtti\ exceptions
-	-DANDROID_ALLOW_UNDEFINED_VERSION_SCRIPT_SYMBOLS=ON
- -DCMAKE_CXX_FLAGS=-std=gnu++11
-	-DCMAKE_C_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/${ARCH}/include/\ $ENV{CFLAGS}
-	-DCMAKE_CXX_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/${ARCH}/include/\ $ENV{CXXFLAGS}
-	-DCMAKE_SHARED_LINKER_FLAGS=$ENV{LDFLAGS}
-	-DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-	-DCMAKE_DEBUG_POSTFIX=
-	-DCMAKE_INSTALL_PREFIX=${prefix}
-	-DCMAKE_FIND_ROOT_PATH=${prefix}
- 	${OSG_COMMON}
+	${COMMON_CMAKE_ARGS}
+	${OSG_COMMON}
 
 	BUILD_COMMAND ${wrapper_command} $(MAKE)
 
 	INSTALL_COMMAND mkdir -p <SOURCE_DIR>/3rdparty/build/libpng <SOURCE_DIR>/3rdparty/build/libjpeg <SOURCE_DIR>/3rdparty/build/freetype
 	COMMAND $(MAKE) install
 )
-
 
 set(OPENMW_COMMON
 	-DBUILD_BSATOOL=0
