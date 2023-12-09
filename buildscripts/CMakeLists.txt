@@ -330,7 +330,7 @@ ExternalProject_Add(bullet
 	URL_HASH ${BULLET_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
-	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/bullet-fix-cmake.patch
+#	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/bullet-fix-cmake.patch
 	#PATCH_COMMAND patch -p0 --forward <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/bullet-fix-cmake.patch || true
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
@@ -354,7 +354,7 @@ ExternalProject_Add(gl4es
 
 	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/shared-library.patch
 #	COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/gamma.patch
-#	COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/keyword-usage.patch
+	#COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/keyword-usage.patch
 
 	CONFIGURE_COMMAND ""
 
@@ -376,7 +376,7 @@ ExternalProject_Add(mygui
 	DOWNLOAD_DIR ${download_dir}
 	
         
-#	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/mygui-dont-set-debug-postfix.patch
+#PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/mygui-dont-set-debug-postfix.patch
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
@@ -481,7 +481,7 @@ ExternalProject_Add(libcollada
 	URL_HASH SHA256=3be672407a7aef60b64ce4b39704b32816b0b28f61ebffd4fbd02c8012901e0d
 	DOWNLOAD_DIR ${download_dir}
 
-#	PATCH_COMMAND ${LIBCOLLADA_PATCH}
+	#PATCH_COMMAND ${LIBCOLLADA_PATCH}
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
@@ -492,7 +492,7 @@ ExternalProject_Add(libcollada
 	-DCMAKE_CXX_FLAGS=-Dauto_ptr=unique_ptr
 	-DHAVE_STRTOQ=0
 	-DUSE_FILE32API=1
-	-DCMAKE_CXX_FLAGS=-std=c++11
+	-DCMAKE_CXX_FLAGS=-std=gnu++11
 	
 
 	BUILD_COMMAND ${wrapper_command} $(MAKE) 
@@ -502,57 +502,54 @@ ExternalProject_Add(libcollada
 )
 
 set(OSG_COMMON
-	-DOPENGL_PROFILE="GL1"
-	-DDYNAMIC_OPENTHREADS=OFF
-	-DDYNAMIC_OPENSCENEGRAPH=OFF
-	-DCMAKE_CXX_FLAGS=-std=c++11
-	-DBUILD_OSG_PLUGIN_OSG=ON
-	-DBUILD_OSG_PLUGIN_DDS=ON
-	-DBUILD_OSG_PLUGIN_TGA=ON
-		-DBUILD_OSG_PLUGIN_DAE=ON
-	-DBUILD_OSG_PLUGIN_BMP=ON
-	-DBUILD_OSG_PLUGIN_JPEG=ON
-	-DBUILD_OSG_PLUGIN_PNG=ON
-	-DBUILD_OSG_PLUGIN_FREETYPE=ON
-	-DJPEG_INCLUDE_DIR=${prefix}/include/
-	-DPNG_INCLUDE_DIR=${prefix}/include/
-	-DFREETYPE_DIR=${prefix}/
-	-DFREETYPE_INCLUDE_DIR=${prefix}/include/freetype2/
-        -DCOLLADA_INCLUDE_DIR=${prefix}/include/collada-dom2.5/
-        -DCOLLADA_DIR=${prefix}/include/collada-dom2.5/1.4/
-        -DOPENGL_INCLUDE_DIR=${prefix}/include/
-	-DOSG_CPP_EXCEPTIONS_AVAILABLE=TRUE
-	-DOSG_GL1_AVAILABLE=ON
-	-DOSG_GL2_AVAILABLE=OFF
-	-DOSG_GL3_AVAILABLE=OFF
-	-DOSG_GLES1_AVAILABLE=OFF
-	-DOSG_GLES2_AVAILABLE=OFF
-	-DOSG_GL_LIBRARY_STATIC=OFF
-	-DOSG_GL_DISPLAYLISTS_AVAILABLE=OFF
-	-DOSG_GL_MATRICES_AVAILABLE=ON
-	-DOSG_GL_VERTEX_FUNCS_AVAILABLE=ON
-	-DOSG_GL_VERTEX_ARRAY_FUNCS_AVAILABLE=ON
-	-DOSG_GL_FIXED_FUNCTION_AVAILABLE=ON
-	-DBUILD_OSG_APPLICATIONS=OFF
-	-DBUILD_OSG_PLUGINS_BY_DEFAULT=OFF
-	-DBUILD_OSG_DEPRECATED_SERIALIZERS=OFF
+        -DOPENGL_PROFILE="GL1"
+        -DDYNAMIC_OPENTHREADS=OFF
+        -DDYNAMIC_OPENSCENEGRAPH=OFF
+        -DBUILD_OSG_PLUGIN_OSG=ON
+        -DBUILD_OSG_PLUGIN_DAE=ON
+        -DBUILD_OSG_PLUGIN_DDS=ON
+        -DBUILD_OSG_PLUGIN_TGA=ON
+        -DBUILD_OSG_PLUGIN_BMP=ON
+        -DBUILD_OSG_PLUGIN_JPEG=ON
+        -DBUILD_OSG_PLUGIN_PNG=ON
+        -DBUILD_OSG_PLUGIN_FREETYPE=ON
+        -DJPEG_INCLUDE_DIR=${prefix}/include/
+        -DPNG_INCLUDE_DIR=${prefix}/include/
+        -DFREETYPE_DIR=${prefix}
+        -DCOLLADA_INCLUDE_DIR=${prefix}/include/collada-dom2.5
+        -DCOLLADA_DIR=${prefix}/include/collada-dom2.5/1.4
+        -DOSG_CPP_EXCEPTIONS_AVAILABLE=TRUE
+        -DOSG_GL1_AVAILABLE=ON
+        -DOSG_GL2_AVAILABLE=OFF
+        -DOSG_GL3_AVAILABLE=OFF
+        -DOSG_GLES1_AVAILABLE=OFF
+        -DOSG_GLES2_AVAILABLE=OFF
+        -DOSG_GL_LIBRARY_STATIC=OFF
+        -DOSG_GL_DISPLAYLISTS_AVAILABLE=OFF
+        -DOSG_GL_MATRICES_AVAILABLE=ON
+        -DOSG_GL_VERTEX_FUNCS_AVAILABLE=ON
+        -DOSG_GL_VERTEX_ARRAY_FUNCS_AVAILABLE=ON
+        -DOSG_GL_FIXED_FUNCTION_AVAILABLE=ON
+        -DBUILD_OSG_APPLICATIONS=OFF
+        -DBUILD_OSG_PLUGINS_BY_DEFAULT=OFF
+        -DBUILD_OSG_DEPRECATED_SERIALIZERS=OFF
 -DOPENGL_opengl_LIBRARY=${prefix}/lib/libGL.so
 -DOPENGL_glx_LIBRARY=${prefix}/lib/libGL.so
 -DOPENGL_INCLUDE_DIR=${prefix}/include/gl4es/
 )
 
 set(OSG_PATCH
-	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/disable-polygon-offset.patch &&
-#	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-lib-prefix-from-plugins.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/fix-freetype-include-dirs.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0001-Replace-Atomic-impl-with-std-atomic.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0002-BufferObject-make-numClients-atomic.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0004-IncrementalCompileOperation-wrap-some-stuff-in-atomi.patch &&
+       # patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/disable-polygon-offset.patch &&
+    #    patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-lib-prefix-from-plugins.patch &&
+       patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/fix-freetype-include-dirs.patch
+       # patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0001-Replace-Atomic-impl-with-std-atomic.patch &&
+    #    patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0002-BufferObject-make-numClients-atomic.patch &&
+     #   patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0004-IncrementalCompileOperation-wrap-some-stuff-in-atomi.patch &&
         #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-zlib-dependency.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/force-add-plugins.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/dae_collada.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/psa.patch &&
-	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
+     #   patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/force-add-plugins.patch &&
+   #     patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/dae_collada.patch &&
+     #   patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/psa.patch &&
+  #      patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
 )
 
 ExternalProject_Add(osg
@@ -563,10 +560,11 @@ ExternalProject_Add(osg
 	URL_HASH ${OSG_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
-#	PATCH_COMMAND ${OSG_PATCH}
+	PATCH_COMMAND ${OSG_PATCH}
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
+		-DCMAKE_CXX_FLAGS=-std=gnu++11
 	${OSG_COMMON}
 
 	BUILD_COMMAND ${wrapper_command} $(MAKE)
