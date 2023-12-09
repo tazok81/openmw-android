@@ -558,7 +558,7 @@ ExternalProject_Add(osg
 	URL_HASH ${OSG_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
-	PATCH_COMMAND ${OSG_PATCH}
+	#PATCH_COMMAND ${OSG_PATCH}
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
@@ -618,7 +618,7 @@ ExternalProject_Add(openmw
 	#URL_HASH ${OPENMW_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
-	PATCH_COMMAND ${OPENMW_PATCH}
+	#PATCH_COMMAND ${OPENMW_PATCH}
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
