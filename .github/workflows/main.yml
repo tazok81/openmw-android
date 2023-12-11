@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [workflow_dispatch, push, pull_request]
 
 jobs:
   build:
@@ -51,6 +51,15 @@ jobs:
         echo "symbols_file=$(ls symbols-*.7z | sed 's/\(.*\)\..*/\1/')" >> $GITHUB_ENV
 
     - name: Upload the APK
+      if: github.event_name != 'pull_request'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: duron-${{ github.sha }}
+        name: ${{ env.apk_file }}
+        path: ${{ env.apk_file }}.apk
+
+    - name: Upload Artifact
+      if: github.event_name == 'pull_request'
       uses: actions/upload-artifact@v3
       with:
         name: ${{ env.apk_file }}
