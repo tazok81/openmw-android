@@ -26,7 +26,7 @@ set(FFMPEG_HASH SHA256=42093549751b582cf0f338a21a3664f52e0a9fbe0d238d3c992005e49
 
 # https://www.libsdl.org/download-2.0.php
 set(SDL2_VERSION 2.0.22)
-#set(SDL2_HASH SHA256=349268f695c02efbc9b9148a70b85e58cefbbf704abd3e91be654db7f1e2c863)
+set(SDL2_HASH SHA256=fe7cbf3127882e3fc7259a75a0cb585620272c51745d3852ab9dd87960697f2e)
 
 # https://github.com/bulletphysics/bullet3/releases
 set(BULLET_VERSION 3.17)
@@ -37,8 +37,8 @@ set(MYGUI_VERSION 3.4.1)
 set(MYGUI_HASH SHA256=bdf730bdeb4ad89e6b8223967db01aa5274d2b93adc2c0d6aa4842faeed4de1a)
 
 # https://github.com/ptitSeb/gl4es/releases
-set(GL4ES_VERSION v1.1.4)
-set(GL4ES_HASH SHA256=b565e717c7d192e936bda25f3cb90ad8db398af56414ec08294b6716574c1a6d)
+set(GL4ES_VERSION 5ac069d82ad8ca2cc3c574484e4c5bad880db83e)
+set(GL4ES_HASH SHA256=60ee788c2b43a5a25cd1a8a0071a77e957f2d5ff070eda5c39eb120d1ad2c3ea)
 
 # https://github.com/openscenegraph/OpenSceneGraph/releases
 set(OSG_VERSION 3.6.5)
@@ -50,11 +50,11 @@ set(LZ4_HASH SHA256=030644df4611007ff7dc962d981f390361e6c97a34e5cbc393ddfbe019ff
 
 # https://luajit.org/download.html
 set(LUAJIT_VERSION v2.1.0-beta3)
-set(LUAJIT_HASH SHA256=1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3)
+set(LUAJIT_HASH SHA256=409f7fe570d3c16558e594421c47bdd130238323c9d6fd6c83dedd2aaeb082a8)
 
 # https://github.com/OpenMW/openmw/commits/master
 set(OPENMW_VERSION 1a39ef07c86ca0c4bb6d1999becb8b478ee3ee24)
-set(OPENMW_HASH SHA256=8ce70ffabcc03dba33fe955b273ae6a6afe3ae054797261f38781a869a0e04ec)
+set(OPENMW_HASH SHA256=0939845b23de466e90401ba47a8d4d55d9ca7061118867c1f316adaccd4a0eaa)
 
 # https://github.com/unicode-org/icu/
 set(LIBICU_VERSION 70-1)
@@ -138,7 +138,6 @@ endif()
 
 ExternalProject_Add(libjpeg-turbo
 	URL https://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG_TURBO_VERSION}/libjpeg-turbo-${LIBJPEG_TURBO_VERSION}.tar.gz/download
-	https://github.com/xyzz/openmw-deps/releases/download/v0/libjpeg-turbo-${LIBJPEG_TURBO_VERSION}.tar.gz
 	URL_HASH ${LIBJPEG_TURBO_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
@@ -174,7 +173,6 @@ ExternalProject_Add(libicu
 
 ExternalProject_Add(libpng
 	URL http://prdownloads.sourceforge.net/libpng/libpng-${LIBPNG_VERSION}.tar.xz
-	https://github.com/xyzz/openmw-deps/releases/download/v0/libpng-${LIBPNG_VERSION}.tar.xz
 	URL_HASH ${LIBPNG_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
@@ -188,7 +186,6 @@ ExternalProject_Add(libpng
 
 ExternalProject_Add(freetype2
 	URL https://download.savannah.gnu.org/releases/freetype/freetype-${FREETYPE2_VERSION}.tar.gz
-	https://github.com/xyzz/openmw-deps/releases/download/v0/freetype-${FREETYPE2_VERSION}.tar.gz
 	URL_HASH ${FREETYPE2_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
@@ -203,7 +200,6 @@ ExternalProject_Add(freetype2
 
 ExternalProject_Add(openal
 	URL https://github.com/kcat/openal-soft/archive/${OPENAL_VERSION}.tar.gz
-	https://github.com/xyzz/openmw-deps/releases/download/v0/openal-soft-${OPENAL_VERSION}.tar.gz
 	URL_HASH ${OPENAL_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
@@ -225,48 +221,46 @@ add_compile_definitions(BOOST_NO_CXX98_FUNCTION_BASE=1)
 string(REPLACE "." "_" BOOST_VERSION_UNDERSCORE ${BOOST_VERSION})
 ExternalProject_Add(boost
         URL https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2
-	https://github.com/xyzz/openmw-deps/releases/download/v0/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2
 	URL_HASH ${BOOST_HASH}
 	DOWNLOAD_DIR ${download_dir}
 	
 	
 BUILD_IN_SOURCE 1
 
-    CONFIGURE_COMMAND ${wrapper_command} <SOURCE_DIR>/bootstrap.sh
-    --prefix=${prefix}
+        CONFIGURE_COMMAND ${wrapper_command} <SOURCE_DIR>/bootstrap.sh
+        --prefix=${prefix}
 
-    BUILD_COMMAND ""
+        BUILD_COMMAND ""
 
-    INSTALL_COMMAND ${wrapper_command} ./b2
-    -j4
-    --with-filesystem
-    --with-program_options
-    --with-system
-    --with-iostreams
-    --with-regex
-    --ignore-site-config
-    toolset=clang
-    architecture=${BOOST_ARCH}
-    address-model=${BOOST_ADDRESS_MODEL}
-    cflags=$ENV{CFLAGS}
-    cxxflags=$ENV{CXXFLAGS}
-    variant=release
-    target-os=android
-    threading=multi
-    threadapi=pthread
-    link=static
-    runtime-link=static
-    install
-    COMMAND llvm-ranlib ${prefix}/lib/libboost_filesystem.a
-    COMMAND llvm-ranlib ${prefix}/lib/libboost_program_options.a
-    COMMAND llvm-ranlib ${prefix}/lib/libboost_system.a
-    COMMAND llvm-ranlib ${prefix}/lib/libboost_iostreams.a
-    COMMAND llvm-ranlib ${prefix}/lib/libboost_regex.a
+        INSTALL_COMMAND ${wrapper_command} ./b2
+        -j4
+        --with-filesystem
+        --with-program_options
+        --with-system
+        --with-iostreams
+        --with-regex
+        --ignore-site-config
+        toolset=clang
+        architecture=${BOOST_ARCH}
+        address-model=${BOOST_ADDRESS_MODEL}
+        cflags=$ENV{CFLAGS}
+        cxxflags=$ENV{CXXFLAGS}
+        variant=release
+        target-os=android
+        threading=multi
+        threadapi=pthread
+        link=static
+        runtime-link=static
+        install
+        COMMAND llvm-ranlib ${prefix}/lib/libboost_filesystem.a
+        COMMAND llvm-ranlib ${prefix}/lib/libboost_program_options.a
+        COMMAND llvm-ranlib ${prefix}/lib/libboost_system.a
+        COMMAND llvm-ranlib ${prefix}/lib/libboost_iostreams.a
+        COMMAND llvm-ranlib ${prefix}/lib/libboost_regex.a
 )
 
 ExternalProject_Add(ffmpeg
 	URL http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.bz2
-	https://github.com/xyzz/openmw-deps/releases/download/v0/ffmpeg-${FFMPEG_VERSION}.tar.bz2
 	URL_HASH ${FFMPEG_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
@@ -307,12 +301,11 @@ ExternalProject_Add(ffmpeg
 
 ExternalProject_Add(sdl2
 	URL https://www.libsdl.org/release/SDL2-${SDL2_VERSION}.tar.gz
-	https://github.com/xyzz/openmw-deps/releases/download/v0/SDL2-${SDL2_VERSION}.tar.gz
 	URL_HASH ${SDL2_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
-#	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/sdl2-android-120hz-gyroscope.patch
-#	COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/sdl2-disable-gamma-warning.patch
+        #PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/sdl2-android-120hz-gyroscope.patch
+        #COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/sdl2-disable-gamma-warning.patch
 
 	CONFIGURE_COMMAND ""
 
@@ -326,11 +319,10 @@ ExternalProject_Add(sdl2
 
 ExternalProject_Add(bullet
 	URL https://github.com/bulletphysics/bullet3/archive/${BULLET_VERSION}.tar.gz
-	https://github.com/xyzz/openmw-deps/releases/download/v0/bullet3-${BULLET_VERSION}.tar.gz
 	URL_HASH ${BULLET_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
-#	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/bullet-fix-cmake.patch
+        #PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/bullet-fix-cmake.patch
 	#PATCH_COMMAND patch -p0 --forward <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/bullet-fix-cmake.patch || true
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
@@ -348,13 +340,8 @@ ExternalProject_Add(bullet
 
 ExternalProject_Add(gl4es
         URL https://github.com/ptitSeb/gl4es/archive/${GL4ES_VERSION}.tar.gz
-        #https://github.com/xyzz/openmw-deps/releases/download/v0/gl4es-${GL4ES_VERSION}.gz
         URL_HASH ${GL4ES_HASH}
         DOWNLOAD_DIR ${download_dir}
-
-        PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/shared-library.patch
-        #COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/gamma.patch
-        #COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/gl4es/keyword-usage.patch
 
         CONFIGURE_COMMAND ""
 
@@ -371,12 +358,11 @@ ExternalProject_Add(mygui
 	DEPENDS freetype2
 
 	URL https://github.com/MyGUI/mygui/archive/MyGUI${MYGUI_VERSION}.tar.gz
-	https://github.com/xyzz/openmw-deps/releases/download/v0/MyGUI${MYGUI_VERSION}.tar.gz
-	#URL_HASH ${MYGUI_HASH}
+	URL_HASH ${MYGUI_HASH}
 	DOWNLOAD_DIR ${download_dir}
 	
         
-#PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/mygui-dont-set-debug-postfix.patch
+        #PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/mygui-dont-set-debug-postfix.patch
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
@@ -395,7 +381,6 @@ ExternalProject_Add(mygui
 
 ExternalProject_Add(lz4
 	URL https://github.com/lz4/lz4/archive/v${LZ4_VERSION}.tar.gz
-	https://github.com/xyzz/openmw-deps/releases/download/v0/v${LZ4_VERSION}.tar.gz
 	URL_HASH ${LZ4_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
@@ -422,7 +407,7 @@ set(LUAJIT_MAKE_FLAGS
 
 ExternalProject_Add(luajit
 	URL https://github.com/luaJit/LuaJIT/archive/${LUAJIT_VERSION}.tar.gz
-#	URL_HASH ${LUAJIT_HASH}
+        URL_HASH ${LUAJIT_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
 	BUILD_IN_SOURCE 1
@@ -489,7 +474,6 @@ ExternalProject_Add(libcollada
 	-DBoost_USE_STATIC_RUNTIME=ON
 	-DBoost_NO_SYSTEM_PATHS=ON
 	-DBoost_INCLUDE_DIR=${prefix}/include
-	-DCMAKE_CXX_FLAGS=-Dauto_ptr=unique_ptr
 	-DHAVE_STRTOQ=0
 	-DUSE_FILE32API=1
 	-DCMAKE_CXX_FLAGS=-std=gnu++11
@@ -533,30 +517,29 @@ set(OSG_COMMON
         -DBUILD_OSG_APPLICATIONS=OFF
         -DBUILD_OSG_PLUGINS_BY_DEFAULT=OFF
         -DBUILD_OSG_DEPRECATED_SERIALIZERS=OFF
--DOPENGL_opengl_LIBRARY=${prefix}/lib/libGL.so
--DOPENGL_glx_LIBRARY=${prefix}/lib/libGL.so
--DOPENGL_INCLUDE_DIR=${prefix}/include/gl4es/
+        -DOPENGL_opengl_LIBRARY=${prefix}/lib/libGL.so
+        -DOPENGL_glx_LIBRARY=${prefix}/lib/libGL.so
+        -DOPENGL_INCLUDE_DIR=${prefix}/include/gl4es/
 )
 
 set(OSG_PATCH
-       # patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/disable-polygon-offset.patch &&
-    #    patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-lib-prefix-from-plugins.patch &&
-       patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/fix-freetype-include-dirs.patch
-       # patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0001-Replace-Atomic-impl-with-std-atomic.patch &&
-    #    patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0002-BufferObject-make-numClients-atomic.patch &&
-     #   patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0004-IncrementalCompileOperation-wrap-some-stuff-in-atomi.patch &&
+        #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/disable-polygon-offset.patch &&
+        #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-lib-prefix-from-plugins.patch &&
+        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/fix-freetype-include-dirs.patch
+        #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0001-Replace-Atomic-impl-with-std-atomic.patch &&
+        #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0002-BufferObject-make-numClients-atomic.patch &&
+        #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0004-IncrementalCompileOperation-wrap-some-stuff-in-atomi.patch &&
         #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-zlib-dependency.patch &&
-     #   patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/force-add-plugins.patch &&
-   #     patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/dae_collada.patch &&
-     #   patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/psa.patch &&
-  #      patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
+        #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/force-add-plugins.patch &&
+        #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/dae_collada.patch &&
+        #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/psa.patch &&
+        #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
 )
 
 ExternalProject_Add(osg
 	DEPENDS libjpeg-turbo libpng gl4es freetype2
 
 	URL https://github.com/openscenegraph/OpenSceneGraph/archive/OpenSceneGraph-${OSG_VERSION}.tar.gz
-	https://github.com/xyzz/openmw-deps/releases/download/v0/OpenSceneGraph-${OSG_VERSION}.tar.gz
 	URL_HASH ${OSG_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
@@ -564,7 +547,7 @@ ExternalProject_Add(osg
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
-		-DCMAKE_CXX_FLAGS=-std=gnu++11
+	-DCMAKE_CXX_FLAGS=-std=gnu++11
 	${OSG_COMMON}
 
 	BUILD_COMMAND ${wrapper_command} $(MAKE)
@@ -618,7 +601,7 @@ ExternalProject_Add(openmw
 	DEPENDS boost openal osg mygui ffmpeg sdl2 bullet lz4 luajit libicu
 
 	URL https://github.com/OpenMW/openmw/archive/${OPENMW_VERSION}.tar.gz
-	#URL_HASH ${OPENMW_HASH}
+	URL_HASH ${OPENMW_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
 	#PATCH_COMMAND ${OPENMW_PATCH}
