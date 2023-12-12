@@ -33,7 +33,7 @@ set(BULLET_VERSION 3.17)
 set(BULLET_HASH SHA256=baa642c906576d4d98d041d0acb80d85dd6eff6e3c16a009b1abf1ccd2bc0a61)
 
 #https://github.com/MyGUI/mygui/releases
-set(MYGUI_VERSION 3.4.1)
+set(MYGUI_VERSION 3.4.3)
 set(MYGUI_HASH SHA256=bdf730bdeb4ad89e6b8223967db01aa5274d2b93adc2c0d6aa4842faeed4de1a)
 
 # https://github.com/ptitSeb/gl4es/releases
@@ -358,7 +358,7 @@ ExternalProject_Add(mygui
 	DEPENDS freetype2
 
 	URL https://github.com/MyGUI/mygui/archive/MyGUI${MYGUI_VERSION}.tar.gz
-	URL_HASH ${MYGUI_HASH}
+	#URL_HASH ${MYGUI_HASH}
 	DOWNLOAD_DIR ${download_dir}
 	
         
@@ -542,7 +542,7 @@ set(OSG_PATCH
         #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0002-BufferObject-make-numClients-atomic.patch &&
         #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0004-IncrementalCompileOperation-wrap-some-stuff-in-atomi.patch &&
         #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-zlib-dependency.patch &&
-        #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/force-add-plugins.patch &&
+        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/force-add-plugins.patch &&
         patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/dae_collada.patch
         #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/psa.patch &&
         #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
