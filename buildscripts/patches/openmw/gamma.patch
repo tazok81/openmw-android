@@ -35,26 +35,6 @@ index e497fdecd..cc654e629 100644
  namespace MWRender
  {
  
-@@ -97,6 +123,19 @@ namespace MWRender
-             }
-             else
-                 stateset->removeAttribute(osg::StateAttribute::POLYGONMODE);
-+
-+            {
-+                static bool init = false;
-+                static float gamma = 0;
-+                if (!init) {
-+                    const char *s = getenv("OPENMW_GAMMA");
-+                    if (s)
-+                        gamma = atof(s);
-+                    init = true;
-+                }
-+                osg::ref_ptr<GammaCorrection> gammaAttribute = new GammaCorrection(gamma);
-+                stateset->setAttribute(gammaAttribute);
-+            }
-         }
- 
-         void apply(osg::StateSet* stateset, osg::NodeVisitor*) override
 @@ -252,6 +291,10 @@ namespace MWRender
          for (auto itr = shadowDefines.begin(); itr != shadowDefines.end(); itr++)
              globalDefines[itr->first] = itr->second;
