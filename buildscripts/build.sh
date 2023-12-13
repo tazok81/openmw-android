@@ -10,7 +10,7 @@ ASAN="false"
 DEPLOY_RESOURCES="true"
 LTO="false"
 BUILD_TYPE="release"
-CFLAGS="-fPIC"
+CFLAGS="-fPIC -Wno-error=implicit-function-declaration"
 CXXFLAGS="-fPIC -frtti -fexceptions"
 LDFLAGS="-Wl,--undefined-version"
 
