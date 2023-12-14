@@ -53,7 +53,7 @@ set(LUAJIT_VERSION v2.1.0-beta3)
 set(LUAJIT_HASH SHA256=409f7fe570d3c16558e594421c47bdd130238323c9d6fd6c83dedd2aaeb082a8)
 
 # https://github.com/OpenMW/openmw/commits/master
-set(OPENMW_VERSION 881f41cf7976aa11197a6f8d6f51861919c1fec7)
+set(OPENMW_VERSION 30c7f9113254f2bd03c3ab901906040e471bc43c)
 set(OPENMW_HASH SHA256=0939845b23de466e90401ba47a8d4d55d9ca7061118867c1f316adaccd4a0eaa)
 
 # https://github.com/unicode-org/icu/
