@@ -12,7 +12,7 @@ LTO="false"
 BUILD_TYPE="release"
 CFLAGS="-fPIC -w"
 CXXFLAGS="-fPIC -frtti -fexceptions -w"
-LDFLAGS="-Wl,--undefined-version"
+LDFLAGS="-fPIC -Wl,--undefined-version"
 
 usage() {
 	echo "Usage: ./build.sh [--help] [--asan] [--arch arch] [--debug|--release]"
