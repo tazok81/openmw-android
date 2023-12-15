@@ -1,14 +1,5 @@
-# No longer under development
-
-You can download one of the old builds from the Releases tab.
 
 # OpenMW for Android
-
-[Google Play](https://play.google.com/store/apps/details?id=is.xyz.omw) | [Google Play (Nightly)](https://play.google.com/store/apps/details?id=is.xyz.omw_nightly)
-
-[F-Droid](https://f-droid.org/packages/is.xyz.omw/) | [F-Droid (Nightly)](https://f-droid.org/packages/is.xyz.omw_nightly/)
-
-[FAQ & Info](https://omw.xyz.is/)
 
 ## Building
 
@@ -18,7 +9,7 @@ There are two steps for building OpenMW for Android. The first step is building 
 
 You will need some standard tools installed that you probably already have (bash, gcc, g++, sha256sum, unzip).
 
-CMake 3.6.0 or newer is **required**, you can download the latest version [here](https://cmake.org/download/) (and place in your `PATH`) if your distro ships with an outdated version.
+CMake 3.2.0 or newer is **required**, you can download the latest version [here](https://cmake.org/download/) (and place in your `PATH`) if your distro ships with an outdated version.
 
 Additionally, to build the launcher you will need Android SDK installed, it is suggested that you use Android Studio which can set it up for you (see step 2).
 
