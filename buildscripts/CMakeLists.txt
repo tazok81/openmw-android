@@ -112,13 +112,13 @@ set(COMMON_AUTOCONF_FLAGS
 # ffmpeg doesn't like --host, so sandwich it between adding --host to the flags
 set(ffmpeg_configure_flags ${COMMON_AUTOCONF_FLAGS})
 if (${BUILD_TYPE} STREQUAL "debug")
-	# ffmpeg fails to compile if we have asm enabled and optimizations disabled, so disable both
-	set(ffmpeg_configure_flags ${ffmpeg_configure_flags} --disable-asm --disable-optimizations)
+        # ffmpeg fails to compile if we have asm enabled and optimizations disabled, so disable both
+        set(ffmpeg_configure_flags ${ffmpeg_configure_flags} --disable-asm --disable-optimizations)
 endif()
 
-if ((${ARCH} STREQUAL "x86_64") OR (${ARCH} STREQUAL "x86"))
-	# ffmpeg fails to link with assembly optimizations on x86-64
-	set(ffmpeg_configure_flags ${ffmpeg_configure_flags} --disable-asm)
+if ((${ARCH} STREQUAL "x86_64") OR (${ARCH} STREQUAL "x86") OR (${ARCH} STREQUAL "arm64"))
+        # ffmpeg fails to link with assembly optimizations on x86-64
+        set(ffmpeg_configure_flags ${ffmpeg_configure_flags} --disable-asm)
 endif()
 
 set(COMMON_AUTOCONF_FLAGS
@@ -135,7 +135,6 @@ set(libjpeg_turbo_flags "")
 if (${ARCH} STREQUAL "x86")
 	set(libjpeg_turbo_flags ${libjpeg_turbo_flags} --without-simd)
 endif()
-
 ExternalProject_Add(libjpeg-turbo
 	URL https://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG_TURBO_VERSION}/libjpeg-turbo-${LIBJPEG_TURBO_VERSION}.tar.gz/download
 	URL_HASH ${LIBJPEG_TURBO_HASH}
