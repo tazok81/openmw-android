@@ -369,6 +369,7 @@ ExternalProject_Add(mygui
 	-DMYGUI_BUILD_TOOLS=OFF
 	-DMYGUI_BUILD_PLUGINS=OFF
 	-DFREETYPE_FT2BUILD_INCLUDE_DIR=${prefix}/include/freetype2/
+        -DCMAKE_SHARED_LINKER_FLAGS=-Wl,--unresolved-symbols=ignore-all
 
 	-DMYGUI_STATIC=ON
 
@@ -632,6 +633,7 @@ ExternalProject_Add(openmw
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
 	${OPENMW_COMMON}
+        -DCMAKE_SHARED_LINKER_FLAGS=-Wl,--unresolved-symbols=ignore-all
 
 	BUILD_COMMAND $(MAKE)
 
