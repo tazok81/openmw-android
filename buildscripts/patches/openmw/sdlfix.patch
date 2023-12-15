@@ -40,15 +40,6 @@ index cdac794a7e5..338ca1ee9e9 100644
  cd $DEPS_INSTALL/..
  echo
 
-From 7ae5442234c93618d01c154ba73229fc2f003e01 Mon Sep 17 00:00:00 2001
-From: Duron27 <>
-Date: Thu, 14 Dec 2023 20:12:55 -0500
-Subject: [PATCH 2/7] Update CMakeLists.txt
-
----
- CMakeLists.txt | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 34df0216da1..843dea802f1 100644
 --- a/CMakeLists.txt
@@ -80,15 +71,6 @@ index 34df0216da1..843dea802f1 100644
      add_definitions(-DMYGUI_STATIC)
  endif (MYGUI_STATIC)
 
-From debca57b4e72a02879db44ed34e5e5f221614fd5 Mon Sep 17 00:00:00 2001
-From: Duron27 <>
-Date: Thu, 14 Dec 2023 20:13:39 -0500
-Subject: [PATCH 3/7] Update CMakeLists.txt
-
----
- apps/launcher/CMakeLists.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
 diff --git a/apps/launcher/CMakeLists.txt b/apps/launcher/CMakeLists.txt
 index daae65dc668..87cee06e5d5 100644
 --- a/apps/launcher/CMakeLists.txt
@@ -102,15 +84,6 @@ index daae65dc668..87cee06e5d5 100644
      ${OPENAL_LIBRARY}
      components_qt
  )
-
-From 2b337e37961788c80f18f939fe5ce6d4cd933498 Mon Sep 17 00:00:00 2001
-From: Duron27 <>
-Date: Thu, 14 Dec 2023 20:14:30 -0500
-Subject: [PATCH 4/7] Update CMakeLists.txt
-
----
- apps/openmw/CMakeLists.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/apps/openmw/CMakeLists.txt b/apps/openmw/CMakeLists.txt
 index db44b91159e..7e1c39f3df1 100644
@@ -126,15 +99,6 @@ index db44b91159e..7e1c39f3df1 100644
      "osg-ffmpeg-videoplayer"
      "oics"
 
-From f53a64d0d102bd46f4cceed37bfc7ce2fe6d180b Mon Sep 17 00:00:00 2001
-From: Duron27 <>
-Date: Thu, 14 Dec 2023 20:15:14 -0500
-Subject: [PATCH 5/7] Update CMakeLists.txt
-
----
- components/CMakeLists.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
 diff --git a/components/CMakeLists.txt b/components/CMakeLists.txt
 index f61a5bd0b25..d50301e9d76 100644
 --- a/components/CMakeLists.txt
@@ -149,15 +113,6 @@ index f61a5bd0b25..d50301e9d76 100644
      ${MyGUI_LIBRARIES}
      ${LUA_LIBRARIES}
 
-From f929984db00ae04ec4b8f1737747a38aa1610d90 Mon Sep 17 00:00:00 2001
-From: Duron27 <>
-Date: Thu, 14 Dec 2023 20:15:46 -0500
-Subject: [PATCH 6/7] Update CMakeLists.txt
-
----
- extern/oics/CMakeLists.txt | 2 --
- 1 file changed, 2 deletions(-)
-
 diff --git a/extern/oics/CMakeLists.txt b/extern/oics/CMakeLists.txt
 index 4bd3bc51ad6..1b9fea9217f 100644
 --- a/extern/oics/CMakeLists.txt
@@ -171,15 +126,6 @@ index 4bd3bc51ad6..1b9fea9217f 100644
  if (MSVC)
      target_precompile_headers(oics PUBLIC <algorithm> <string>)
  endif()
-
-From 01b8ab7e4b98077e027f383605925db1792c8c0d Mon Sep 17 00:00:00 2001
-From: Duron27 <>
-Date: Thu, 14 Dec 2023 20:16:09 -0500
-Subject: [PATCH 7/7] Update CMakeLists.txt
-
----
- extern/osg-ffmpeg-videoplayer/CMakeLists.txt | 1 -
- 1 file changed, 1 deletion(-)
 
 diff --git a/extern/osg-ffmpeg-videoplayer/CMakeLists.txt b/extern/osg-ffmpeg-videoplayer/CMakeLists.txt
 index 10c8d356a07..7e2712f19b7 100644
