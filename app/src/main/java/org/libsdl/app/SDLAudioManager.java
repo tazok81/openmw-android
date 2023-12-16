@@ -1,10 +1,6 @@
 package org.libsdl.app;
 
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioRecord;
-import android.media.AudioTrack;
-import android.media.MediaRecorder;
+import android.media.*;
 import android.os.Build;
 import android.util.Log;
 
@@ -47,10 +43,6 @@ public class SDLAudioManager
             if (desiredChannels > 2) {
                 desiredChannels = 2;
             }
-         }
-
-        /* AudioTrack has sample rate limitation of 48000 (fixed in 5.0.2) */
-        if (Build.VERSION.SDK_INT < 22) {
             if (sampleRate < 8000) {
                 sampleRate = 8000;
             } else if (sampleRate > 48000) {
@@ -207,7 +199,8 @@ public class SDLAudioManager
             results[0] = mAudioRecord.getSampleRate();
             results[1] = mAudioRecord.getAudioFormat();
             results[2] = mAudioRecord.getChannelCount();
-            
+            results[3] = desiredFrames;
+
         } else {
             if (mAudioTrack == null) {
                 mAudioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate, channelConfig, audioFormat, desiredFrames * frameSize, AudioTrack.MODE_STREAM);
@@ -230,9 +223,9 @@ public class SDLAudioManager
             results[0] = mAudioTrack.getSampleRate();
             results[1] = mAudioTrack.getAudioFormat();
             results[2] = mAudioTrack.getChannelCount();
+            results[3] = desiredFrames;
         }
-        results[3] = desiredFrames;
-        
+
         Log.v(TAG, "Opening " + (isCapture ? "capture" : "playback") + ", got " + results[3] + " frames of " + results[2] + " channel " + getAudioFormatString(results[1]) + " audio at " + results[0] + " Hz");
 
         return results;
