@@ -12,18 +12,8 @@ ext {
 }
 
 android {
-    compileSdkVersion 29
 
-    sourceSets {
-        main {
-            resources {
-                srcDir {
-                    // To include the wrap.sh script required by ASAN
-                    "wrap/res"
-                }
-            }
-        }
-    }
+    compileSdkVersion 29
 
     defaultConfig {
         applicationId "is.xyz.omw"
@@ -55,7 +45,7 @@ android {
 
         debug {
             applicationIdSuffix ".debug"
-            debuggable false
+            debuggable true
         }
     }
 
@@ -72,6 +62,7 @@ android {
             versionNameSuffix "-nightly"
         }
     }
+    ndkVersion '26.1.10909125'
 
     applicationVariants.all { variant ->
         variant.outputs.all {
@@ -81,7 +72,7 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.2.1'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
 
