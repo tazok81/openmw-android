@@ -44,10 +44,8 @@ jobs:
         echo "apk_file=$(ls omw-debug-*.apk | sed 's/\(.*\)\..*/\1/')" >> $GITHUB_ENV
 
     - name: Upload the APK
-      if: github.event_name != 'pull_request'
-      uses: softprops/action-gh-release@v3
+      uses: actions/upload-artifact@v3
       with:
-        tag_name: duron-${{ github.sha }}
         name: ${{ env.apk_file }}
         path: ${{ env.apk_file }}.apk
 
