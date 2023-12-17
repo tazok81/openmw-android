@@ -45,7 +45,7 @@ jobs:
 
     - name: Upload the APK
       if: github.event_name != 'pull_request'
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v3
       with:
         tag_name: duron-${{ github.sha }}
         name: ${{ env.apk_file }}
