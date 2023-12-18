@@ -1,14 +1,5 @@
-From 859047ec652c514a6326d3a236edce6ebf34c23e Mon Sep 17 00:00:00 2001
-From: Duron27 <duron27@gmail.com>
-Date: Wed, 13 Dec 2023 22:05:14 -0500
-Subject: [PATCH] Update CMakeLists.txt
-
----
- CMakeLists.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 34df0216da1..0a23e009f53 100644
+index 34df0216da..0a23e009f5 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -471,7 +471,7 @@ else(USE_LUAJIT)
