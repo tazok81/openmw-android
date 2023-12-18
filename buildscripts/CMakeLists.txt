@@ -609,7 +609,7 @@ set(OPENMW_COMMON
 
 set(OPENMW_PATCH
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/gamma.patch &&
-        #patch -d <SOURCE_DIR> -p1 -t -N -R < ${CMAKE_SOURCE_DIR}/patches/openmw/sdlfix.patch &&
+        patch -d <SOURCE_DIR> -p1 -t -N -R < ${CMAKE_SOURCE_DIR}/patches/openmw/sdlfix.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/cmakefix.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0001-loadingscreen-disable-for-now.patch &&
         patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0009-windowmanagerimp-always-show-mouse-when-possible-pat.patch &&
