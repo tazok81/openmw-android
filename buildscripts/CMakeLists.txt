@@ -41,7 +41,7 @@ set(GL4ES_VERSION 5ac069d82ad8ca2cc3c574484e4c5bad880db83e)
 set(GL4ES_HASH SHA256=60ee788c2b43a5a25cd1a8a0071a77e957f2d5ff070eda5c39eb120d1ad2c3ea)
 
 # https://github.com/openscenegraph/OpenSceneGraph/releases
-set(OSG_VERSION 3.6.5)
+set(OSG_VERSION 69cfecebfb6dc703b42e8de39eed750a84a87489)
 set(OSG_HASH SHA256=aea196550f02974d6d09291c5d83b51ca6a03b3767e234a8c0e21322927d1e12)
 
 # https://github.com/lz4/lz4/releases
@@ -53,7 +53,7 @@ set(LUAJIT_VERSION v2.1.0-beta3)
 set(LUAJIT_HASH SHA256=409f7fe570d3c16558e594421c47bdd130238323c9d6fd6c83dedd2aaeb082a8)
 
 # https://github.com/OpenMW/openmw/commits/master
-set(OPENMW_VERSION 7922f0e7f81db14fe8363785523b489f786d6427)
+set(OPENMW_VERSION 19a6fd4e1be0b9928940a575f00d31b5af76beb5)
 set(OPENMW_HASH SHA256=0939845b23de466e90401ba47a8d4d55d9ca7061118867c1f316adaccd4a0eaa)
 
 # https://github.com/unicode-org/icu/
@@ -81,7 +81,6 @@ set(COMMON_CMAKE_ARGS
 	-DANDROID_STL=c++_shared
 	-DANDROID_LD=deprecated
 	-DANDROID_CPP_FEATURES=rtti\ exceptions
-	-DANDROID_ALLOW_UNDEFINED_VERSION_SCRIPT_SYMBOLS=ON
 	-DCMAKE_C_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/include/\ $ENV{CFLAGS}
 	-DCMAKE_CXX_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/include/\ $ENV{CXXFLAGS}
 	-DCMAKE_SHARED_LINKER_FLAGS=$ENV{LDFLAGS}
@@ -89,8 +88,6 @@ set(COMMON_CMAKE_ARGS
 	-DCMAKE_DEBUG_POSTFIX=
 	-DCMAKE_INSTALL_PREFIX=${prefix}
 	-DCMAKE_FIND_ROOT_PATH=${prefix}
-
-
 )
 
 set(COMMON_NDK_BUILD_FLAGS
@@ -112,13 +109,13 @@ set(COMMON_AUTOCONF_FLAGS
 # ffmpeg doesn't like --host, so sandwich it between adding --host to the flags
 set(ffmpeg_configure_flags ${COMMON_AUTOCONF_FLAGS})
 if (${BUILD_TYPE} STREQUAL "debug")
-        # ffmpeg fails to compile if we have asm enabled and optimizations disabled, so disable both
-        set(ffmpeg_configure_flags ${ffmpeg_configure_flags} --disable-asm --disable-optimizations)
+	# ffmpeg fails to compile if we have asm enabled and optimizations disabled, so disable both
+	set(ffmpeg_configure_flags ${ffmpeg_configure_flags} --disable-asm --disable-optimizations)
 endif()
 
 if ((${ARCH} STREQUAL "x86_64") OR (${ARCH} STREQUAL "x86") OR (${ARCH} STREQUAL "arm64"))
-        # ffmpeg fails to link with assembly optimizations on x86-64
-        set(ffmpeg_configure_flags ${ffmpeg_configure_flags} --disable-asm)
+	# ffmpeg fails to link with assembly optimizations on x86-64
+	set(ffmpeg_configure_flags ${ffmpeg_configure_flags} --disable-asm)
 endif()
 
 set(COMMON_AUTOCONF_FLAGS
@@ -135,6 +132,7 @@ set(libjpeg_turbo_flags "")
 if (${ARCH} STREQUAL "x86")
 	set(libjpeg_turbo_flags ${libjpeg_turbo_flags} --without-simd)
 endif()
+
 ExternalProject_Add(libjpeg-turbo
 	URL https://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG_TURBO_VERSION}/libjpeg-turbo-${LIBJPEG_TURBO_VERSION}.tar.gz/download
 	URL_HASH ${LIBJPEG_TURBO_HASH}
@@ -360,7 +358,7 @@ ExternalProject_Add(mygui
 	DOWNLOAD_DIR ${download_dir}
 	
         
-        PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/mygui-dont-set-debug-postfix.patch
+    #PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/mygui-dont-set-debug-postfix.patch
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
@@ -368,8 +366,8 @@ ExternalProject_Add(mygui
 	-DMYGUI_BUILD_DEMOS=OFF
 	-DMYGUI_BUILD_TOOLS=OFF
 	-DMYGUI_BUILD_PLUGINS=OFF
+	-DMYGUI_DONT_USE_OBSOLETE=ON
 	-DFREETYPE_FT2BUILD_INCLUDE_DIR=${prefix}/include/freetype2/
-        -DCMAKE_SHARED_LINKER_FLAGS=-Wl,--unresolved-symbols=ignore-all
 
 	-DMYGUI_STATIC=ON
 
@@ -468,69 +466,55 @@ ExternalProject_Add(libcollada
 	PATCH_COMMAND ${LIBCOLLADA_PATCH}
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
-	-DCMAKE_TOOLCHAIN_FILE=${CMAKE_SOURCE_DIR}/toolchain/ndk/build/cmake/android.toolchain.cmake
-	-DANDROID_ABI=${app_abi}
-	-DANDROID_PLATFORM=${android_platform}
-	-DANDROID_STL=c++_shared
-	-DANDROID_LD=deprecated
-	-DANDROID_CPP_FEATURES=rtti\ exceptions
-	-DANDROID_ALLOW_UNDEFINED_VERSION_SCRIPT_SYMBOLS=ON
-	-DCMAKE_C_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/include/\ $ENV{CFLAGS}
-	-DCMAKE_CXX_FLAGS=-std=gnu++11\ -DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/include/\ $ENV{CXXFLAGS}
-	-DCMAKE_SHARED_LINKER_FLAGS=$ENV{LDFLAGS}
-	-DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-	-DCMAKE_DEBUG_POSTFIX=
-	-DCMAKE_INSTALL_PREFIX=${prefix}
-	-DCMAKE_FIND_ROOT_PATH=${prefix}
+	${COMMON_CMAKE_ARGS}
 	-DBoost_USE_STATIC_LIBS=ON
 	-DBoost_USE_STATIC_RUNTIME=ON
 	-DBoost_NO_SYSTEM_PATHS=ON
 	-DBoost_INCLUDE_DIR=${prefix}/include
 	-DHAVE_STRTOQ=0
 	-DUSE_FILE32API=1
-	
+	-DCMAKE_CXX_FLAGS=-std=gnu++11\ -I${prefix}/include/\ $ENV{CXXFLAGS}
 
-	BUILD_COMMAND ${wrapper_command} $(MAKE) 
-   
+	BUILD_COMMAND ${wrapper_command} $(MAKE)
 
 	INSTALL_COMMAND ${wrapper_command} $(MAKE) install
 )
 
 set(OSG_COMMON
-        -DOPENGL_PROFILE="GL1"
-        -DDYNAMIC_OPENTHREADS=OFF
-        -DDYNAMIC_OPENSCENEGRAPH=OFF
-        -DBUILD_OSG_PLUGIN_OSG=ON
-        -DBUILD_OSG_PLUGIN_DAE=ON
-        -DBUILD_OSG_PLUGIN_DDS=ON
-        -DBUILD_OSG_PLUGIN_TGA=ON
-        -DBUILD_OSG_PLUGIN_BMP=ON
-        -DBUILD_OSG_PLUGIN_JPEG=ON
-        -DBUILD_OSG_PLUGIN_PNG=ON
-        -DBUILD_OSG_PLUGIN_FREETYPE=ON
-        -DJPEG_INCLUDE_DIR=${prefix}/include/
-        -DPNG_INCLUDE_DIR=${prefix}/include/
-        -DFREETYPE_DIR=${prefix}
-        -DCOLLADA_INCLUDE_DIR=${prefix}/include/collada-dom2.5
-        -DCOLLADA_DIR=${prefix}/include/collada-dom2.5/1.4
-        -DOSG_CPP_EXCEPTIONS_AVAILABLE=TRUE
-        -DOSG_GL1_AVAILABLE=ON
-        -DOSG_GL2_AVAILABLE=OFF
-        -DOSG_GL3_AVAILABLE=OFF
-        -DOSG_GLES1_AVAILABLE=OFF
-        -DOSG_GLES2_AVAILABLE=OFF
-        -DOSG_GL_LIBRARY_STATIC=OFF
-        -DOSG_GL_DISPLAYLISTS_AVAILABLE=OFF
-        -DOSG_GL_MATRICES_AVAILABLE=ON
-        -DOSG_GL_VERTEX_FUNCS_AVAILABLE=ON
-        -DOSG_GL_VERTEX_ARRAY_FUNCS_AVAILABLE=ON
-        -DOSG_GL_FIXED_FUNCTION_AVAILABLE=ON
-        -DBUILD_OSG_APPLICATIONS=OFF
-        -DBUILD_OSG_PLUGINS_BY_DEFAULT=OFF
-        -DBUILD_OSG_DEPRECATED_SERIALIZERS=OFF
-        -DOPENGL_opengl_LIBRARY=${prefix}/lib/libGL.so
-        -DOPENGL_glx_LIBRARY=${prefix}/lib/libGL.so
-        -DOPENGL_INCLUDE_DIR=${prefix}/include/gl4es/
+	-DOPENGL_PROFILE="GL1"
+	-DDYNAMIC_OPENTHREADS=OFF
+	-DDYNAMIC_OPENSCENEGRAPH=OFF
+	-DBUILD_OSG_PLUGIN_OSG=ON
+	-DBUILD_OSG_PLUGIN_DAE=ON
+	-DBUILD_OSG_PLUGIN_DDS=ON
+	-DBUILD_OSG_PLUGIN_TGA=ON
+	-DBUILD_OSG_PLUGIN_BMP=ON
+	-DBUILD_OSG_PLUGIN_JPEG=ON
+	-DBUILD_OSG_PLUGIN_PNG=ON
+	-DBUILD_OSG_PLUGIN_FREETYPE=ON
+	-DJPEG_INCLUDE_DIR=${prefix}/include/
+	-DPNG_INCLUDE_DIR=${prefix}/include/
+	-DFREETYPE_DIR=${prefix}
+    -DCOLLADA_INCLUDE_DIR=${prefix}/include/collada-dom2.5
+    -DCOLLADA_DIR=${prefix}/include/collada-dom2.5/1.4
+	-DOSG_CPP_EXCEPTIONS_AVAILABLE=TRUE
+	-DOSG_GL1_AVAILABLE=ON
+	-DOSG_GL2_AVAILABLE=OFF
+	-DOSG_GL3_AVAILABLE=OFF
+	-DOSG_GLES1_AVAILABLE=OFF
+	-DOSG_GLES2_AVAILABLE=OFF
+	-DOSG_GL_LIBRARY_STATIC=OFF
+	-DOSG_GL_DISPLAYLISTS_AVAILABLE=OFF
+	-DOSG_GL_MATRICES_AVAILABLE=ON
+	-DOSG_GL_VERTEX_FUNCS_AVAILABLE=ON
+	-DOSG_GL_VERTEX_ARRAY_FUNCS_AVAILABLE=ON
+	-DOSG_GL_FIXED_FUNCTION_AVAILABLE=ON
+	-DBUILD_OSG_APPLICATIONS=OFF
+	-DBUILD_OSG_PLUGINS_BY_DEFAULT=OFF
+	-DBUILD_OSG_DEPRECATED_SERIALIZERS=OFF
+	#-DOPENGL_opengl_LIBRARY=${prefix}/lib/libGL.so
+	#-DOPENGL_glx_LIBRARY=${prefix}/lib/libGL.so
+	#-DOPENGL_INCLUDE_DIR=${prefix}/include/gl4es/
 )
 
 set(OSG_PATCH
@@ -550,34 +534,23 @@ set(OSG_PATCH
 ExternalProject_Add(osg
 	DEPENDS libjpeg-turbo libpng gl4es freetype2 libcollada
 
-	URL https://github.com/openscenegraph/OpenSceneGraph/archive/OpenSceneGraph-${OSG_VERSION}.tar.gz
-	URL_HASH ${OSG_HASH}
+	URL https://github.com/openmw/osg/archive/${OSG_VERSION}.tar.gz
+#	URL_HASH ${OSG_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
 	PATCH_COMMAND ${OSG_PATCH}
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
-	-DCMAKE_TOOLCHAIN_FILE=${CMAKE_SOURCE_DIR}/toolchain/ndk/build/cmake/android.toolchain.cmake
-	-DANDROID_ABI=${app_abi}
-	-DANDROID_PLATFORM=${android_platform}
-	-DANDROID_STL=c++_shared
-	-DANDROID_LD=deprecated
-	-DANDROID_CPP_FEATURES=rtti\ exceptions
-	-DANDROID_ALLOW_UNDEFINED_VERSION_SCRIPT_SYMBOLS=ON
-	-DCMAKE_C_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/include/\ $ENV{CFLAGS}
-	-DCMAKE_CXX_FLAGS=-std=gnu++11\ -DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/include/\ $ENV{CXXFLAGS}
-	-DCMAKE_SHARED_LINKER_FLAGS=$ENV{LDFLAGS}
-	-DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-	-DCMAKE_DEBUG_POSTFIX=
-	-DCMAKE_INSTALL_PREFIX=${prefix}
-	-DCMAKE_FIND_ROOT_PATH=${prefix}
+	${COMMON_CMAKE_ARGS}
 	${OSG_COMMON}
+	-DCMAKE_CXX_FLAGS=-std=gnu++11\ -I${prefix}/include/\ $ENV{CXXFLAGS}
 
 	BUILD_COMMAND ${wrapper_command} $(MAKE)
 
 	INSTALL_COMMAND mkdir -p <SOURCE_DIR>/3rdparty/build/libpng <SOURCE_DIR>/3rdparty/build/libjpeg <SOURCE_DIR>/3rdparty/build/freetype
 	COMMAND $(MAKE) install
 )
+
 
 set(OPENMW_COMMON
 	-DBUILD_BSATOOL=0
@@ -608,15 +581,15 @@ set(OPENMW_COMMON
 )
 
 set(OPENMW_PATCH
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/gamma.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N -R < ${CMAKE_SOURCE_DIR}/patches/openmw/sdlfix.patch &&
+	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/gamma.patch &&
+    patch -d <SOURCE_DIR> -p1 -t -N -R < ${CMAKE_SOURCE_DIR}/patches/openmw/sdlfix.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/cmakefix.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0001-loadingscreen-disable-for-now.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0009-windowmanagerimp-always-show-mouse-when-possible-pat.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0010-android-fix-context-being-lost-on-app-minimize.patch &&
+    patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0009-windowmanagerimp-always-show-mouse-when-possible-pat.patch &&
+    patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0010-android-fix-context-being-lost-on-app-minimize.patch &&
 	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0012-components-misc-stringops-use-boost-format-instead-o.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/fix-build.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/psa.patch &&
+    patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/psa.patch &&
 	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/refraction-fix.patch &&
 	cp ${CMAKE_SOURCE_DIR}/patches/openmw/android_main.cpp <SOURCE_DIR>/apps/openmw/android_main.cpp
 )
@@ -633,7 +606,6 @@ ExternalProject_Add(openmw
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
 	${OPENMW_COMMON}
-        -DCMAKE_SHARED_LINKER_FLAGS=-Wl,--unresolved-symbols=ignore-all
 
 	BUILD_COMMAND $(MAKE)
 
