@@ -15,7 +15,7 @@ Additionally, to build the launcher you will need Android SDK installed, it is s
 
 ### Step 1: Build the libraries
 
-Go into the `buildscripts` directory and run `./build.sh`. The script will automatically download the Android native toolchain and all dependencies, and will compile and install them.
+Go into the `buildscripts` directory and run `./build.sh --arch arm64`. The script will automatically download the Android native toolchain and all dependencies, and will compile and install them.
 
 ### Step 2: Build the Java launcher
 
