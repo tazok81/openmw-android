@@ -319,8 +319,7 @@ ExternalProject_Add(bullet
 	DOWNLOAD_DIR ${download_dir}
 
         PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/bullet-fix-cmake.patch
-	PATCH_COMMAND patch -p0 --forward <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/bullet-fix-cmake.patch || true
-
+	
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
 	-DBUILD_BULLET2_DEMOS=OFF
@@ -328,6 +327,7 @@ ExternalProject_Add(bullet
 	-DBUILD_UNIT_TESTS=OFF
 	-DBUILD_EXTRAS=OFF
 	-DUSE_DOUBLE_PRECISION=ON
+        -DBULLET2_MULTITHREADING=ON
 
 	BUILD_COMMAND ${wrapper_command} $(MAKE)
 
