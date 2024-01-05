@@ -10,8 +10,8 @@ ASAN="false"
 DEPLOY_RESOURCES="true"
 LTO="false"
 BUILD_TYPE="release"
-CFLAGS="-fPIC -w"
-CXXFLAGS="-fPIC -frtti -fexceptions -w"
+CFLAGS="-fPIC"
+CXXFLAGS="-fPIC -frtti -fexceptions"
 LDFLAGS="-fPIC -Wl,--undefined-version"
 
 usage() {
@@ -93,10 +93,10 @@ else
 fi
 
 if [[ $LTO = "true" ]]; then
-	CFLAGS="$CFLAGS -flto"
-	CXXFLAGS="$CXXFLAGS -flto"
+	CFLAGS="$CFLAGS -flto=thin"
+	CXXFLAGS="$CXXFLAGS -flto=thin"
 	# emulated-tls should not be needed in ndk r18 https://github.com/android-ndk/ndk/issues/498#issuecomment-327825754
-	LDFLAGS="$LDFLAGS -flto -Wl,-plugin-opt=-emulated-tls -fuse-ld=lld"
+	LDFLAGS="$LDFLAGS -flto=thin -Wl,-plugin-opt=-emulated-tls -fuse-ld=lld"
 fi
 
 if [[ $ARCH = "arm" ]]; then
@@ -221,14 +221,14 @@ cp "../app/src/main/jniLibs/$ABI/libc++_shared.so" "./symbols/$ABI/"
 if [ $ASAN = true ]; then
         cp ./toolchain/$ARCH/lib64/clang/*/lib/linux/libclang_rt.asan-$ASAN_ARCH-android.so "./symbols/$ABI/"
         cp ./toolchain/$ARCH/lib64/clang/*/lib/linux/libclang_rt.asan-$ASAN_ARCH-android.so "../app/src/main/jniLibs/$ABI/"
-      #  mkdir -p ../app/wrap/res/lib/$ABI/
-     #   sed "s/@ASAN_ARCH@/$ASAN_ARCH/g" < include/asan-wrapper.sh > "../app/wrap/res/lib/$ABI/wrap.sh"
-     #   chmod +x "../app/wrap/res/lib/$ABI/wrap.sh"
+        mkdir -p ../app/wrap/res/lib/$ABI/
+        sed "s/@ASAN_ARCH@/$ASAN_ARCH/g" < include/asan-wrapper.sh > "../app/wrap/res/lib/$ABI/wrap.sh"
+        chmod +x "../app/wrap/res/lib/$ABI/wrap.sh"
 fi
 
 #PATH="$DIR/toolchain/ndk/prebuilt/linux-x86_64/bin/:$DIR/toolchain/$ARCH/$NDK_TRIPLET/bin/:$PATH" ./include/gdb-add-index ./symbols/$ABI/*.so
 
 # gradle should do it, but just in case...
-#llvm-strip ../app/src/main/jniLibs/$ABI/*.so
+llvm-strip ../app/src/main/jniLibs/$ABI/*.so
 
 echo "==> Success"
