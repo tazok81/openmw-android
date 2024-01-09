@@ -214,9 +214,8 @@ ExternalProject_Add(openal
 	INSTALL_COMMAND ${wrapper_command} $(MAKE) install
 )
 
-string(REPLACE "." "_" BOOST_VERSION_UNDERSCORE ${BOOST_VERSION})
 ExternalProject_Add(boost
-        URL https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2
+        URL https://github.com/boostorg/boost/releases/download/boost-${BOOST_VERSION}/boost-${BOOST_VERSION}.tar.bz2
 	URL_HASH ${BOOST_HASH}
 	DOWNLOAD_DIR ${download_dir}
 	
