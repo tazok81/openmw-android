@@ -18,7 +18,7 @@ set(OPENAL_HASH SHA256=8ac17e4e3b32c1af3d5508acfffb838640669b4274606b7892aa796ca
 
 # https://www.boost.org/users/download/#live
 set(BOOST_VERSION 1.83.0)
-set(BOOST_HASH SHA256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855)
+set(BOOST_HASH SHA256=0c6049764e80aa32754acd7d4f179fd5551d8172a83b71532ae093e7384e98da)
 
 # https://www.ffmpeg.org/download.html
 set(FFMPEG_VERSION 4.4)
@@ -215,7 +215,7 @@ ExternalProject_Add(openal
 )
 
 ExternalProject_Add(boost
-        URL https://github.com/boostorg/boost/releases/download/boost-${BOOST_VERSION}/boost-${BOOST_VERSION}.tar.bz2
+        URL https://github.com/boostorg/boost/releases/download/boost-${BOOST_VERSION}/boost-${BOOST_VERSION}.tar.gz
 	URL_HASH ${BOOST_HASH}
 	DOWNLOAD_DIR ${download_dir}
 	
