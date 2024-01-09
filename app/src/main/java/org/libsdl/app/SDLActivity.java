@@ -433,7 +433,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
         if (SDLActivity.mBrokenLibraries) {
            return;
-        }
+        }        
 
         if (mCurrentLocale == null || !mCurrentLocale.equals(newConfig.locale)) {
             mCurrentLocale = newConfig.locale;
@@ -1026,7 +1026,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         return false;
     }
 
-    public static double getDiagonal()
+    public static double getDiagonal() 
     {
         DisplayMetrics metrics = new DisplayMetrics();
         Activity activity = (Activity)getContext();
@@ -1039,7 +1039,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         double dHeightInches = metrics.heightPixels / (double)metrics.ydpi;
 
         double dDiagonal = Math.sqrt((dWidthInches * dWidthInches) + (dHeightInches * dHeightInches));
-
+        
         return dDiagonal;
     }
 
