@@ -1,6 +1,4 @@
-FROM fedora:39
-
-# NDK settings start at line 56
+# NDK Clang settings start at line 56
 
 # App versions - change settings here
 ENV LIBJPEG_TURBO_VERSION=1.5.3
@@ -35,15 +33,26 @@ ENV JAVA_HOME='/usr/lib/jvm/java-17-openjdk-17.0.9.0.9-3.fc39.x86_64'
 RUN wget https://dl.google.com/android/repository/commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip && unzip commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip && mkdir -p ~/Android/cmdline-tools/ && mv cmdline-tools/ ~/Android/cmdline-tools/latest && rm commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip
 RUN yes | ~/Android/cmdline-tools/latest/bin/sdkmanager --licenses
 RUN ~/Android/cmdline-tools/latest/bin/sdkmanager --install "ndk;$NDK_VERSION" --channel=0
-# COPY --chmod=0755 build.sh /
-# COPY --chmod=0755 include /include
-# COPY --chmod=0755 patches /patches
+#COPY --chmod=0755 build.sh /
+#COPY --chmod=0755 include /include
+#COPY --chmod=0755 patches /patches
 
 
 # Setup ICU
 RUN set -e && mkdir -p $HOME/downloads/ && cd $_ && wget https://github.com/unicode-org/icu/archive/refs/tags/release-$LIBICU_VERSION.zip && unzip release-$LIBICU_VERSION.zip
 RUN mkdir -p $HOME/build/icu-host-build && cd $_ && $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure --disable-tests --disable-samples --disable-icuio --disable-extras CC="gcc" CXX="g++"
 RUN cd $HOME/build/icu-host-build && make -j $(nproc)
+
+# NDK Toolchain Settings
+ENV TOOLCHAIN=$HOME/Android/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin
+ENV NDK_TRIPLET=aarch64-linux-android
+ENV TARGET=armv7a-linux-androideabi
+ENV ABI=arm64-v8a
+ENV AR=$TOOLCHAIN/llvm-ar
+ENV AS=$CC
+ENV LD=$TOOLCHAIN/ld
+ENV RANLIB=$TOOLCHAIN/llvm-ranlib
+ENV STRIP=$TOOLCHAIN/llvm-strip
 
 # Patch it to ensure gcc is never ever never used
 RUN rm -f $TOOLCHAIN/$NDK_TRIPLET-gcc
@@ -53,22 +62,9 @@ RUN rm -f $TOOLCHAIN/$NDK_TRIPLET-g++
 RUN ln -s $NDK_TRIPLET$API-clang ~/$TOOLCHAIN/$NDK_TRIPLET-gcc
 RUN ln -s $NDK_TRIPLET$API-clang++ ~/$TOOLCHAIN/$NDK_TRIPLET-g++
 
-# NDK Toolchain Settings
-ENV TOOLCHAIN=$HOME/Android/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin
-ENV NDK_TRIPLET=aarch64-linux-android
-ENV ABI=arm64-v8a
-ENV AR=$TOOLCHAIN/llvm-ar
-ENV CC=$TOOLCHAIN/$TARGET$API-clang
-ENV AS=$CC
-ENV CXX=$TOOLCHAIN/$TARGET$API-clang++
-ENV LD=$TOOLCHAIN/ld
-ENV RANLIB=$TOOLCHAIN/llvm-ranlib
-ENV STRIP=$TOOLCHAIN/llvm-strip
 
-# Global C, CXX and LDFLAGS
-ENV CFLAGS="-fPIC -O3"
-ENV CXXFLAGS="-fPIC -frtti -fexceptions -O3"
-ENV LDFLAGS="-fPIC -Wl,--undefined-version"
+ENV CC=$TOOLCHAIN/$TARGET$API-clang
+ENV CXX=$TOOLCHAIN/$TARGET$API-clang++
 
 ENV COMMON_AUTOCONF_FLAGS= \
 --enable=static \
@@ -93,7 +89,7 @@ ENV LIBICU_FLAGS= \
 --with-cross-build=$HOME/build/icu-host-build)
 
 # Setup LIBICU
-RUN mkdir -p $HOME/build/icu-prefex && cd $_ && $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure $COMMON_AUTOCONF_FLAGS $LIBICU_FLAGS --build=$NDK_TRIPLET
+#RUN mkdir -p $HOME/build/icu-prefex && cd $_ && $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure $COMMON_AUTOCONF_FLAGS $LIBICU_FLAGS
 
 # Setup LIBPNG_VERSION
 #RUN wget http://prdownloads.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.xz -P ~/downloads
