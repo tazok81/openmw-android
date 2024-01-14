@@ -1,3 +1,10 @@
+FROM fedora:39
+
+# Global C, CXX and LDFLAGS
+ENV CFLAGS="-fPIC -O3"
+ENV CXXFLAGS="-fPIC -frtti -fexceptions -O3"
+ENV LDFLAGS="-fPIC -Wl,--undefined-version"
+
 # NDK Clang settings start at line 56
 
 # App versions - change settings here
@@ -86,7 +93,7 @@ ENV LIBICU_FLAGS= \
 --disable=samples \
 --disable=icuio \
 --disable=extras \
---with-cross-build=$HOME/build/icu-host-build)
+--with-cross-build=$HOME/build/icu-host-build
 
 # Setup LIBICU
 #RUN mkdir -p $HOME/build/icu-prefex && cd $_ && $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure $COMMON_AUTOCONF_FLAGS $LIBICU_FLAGS
