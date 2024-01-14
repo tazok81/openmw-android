@@ -1,0 +1,147 @@
+FROM fedora:39
+
+# NDK settings start at line 56
+
+# App versions - change settings here
+ENV LIBJPEG_TURBO_VERSION=1.5.3
+ENV LIBPNG_VERSION=1.6.37
+ENV FREETYPE2_VERSION=2.10.4
+ENV OPENAL_VERSION=1.21.1
+ENV BOOST_VERSION=1.83.0
+ENV LIBICU_VERSION=70-1
+ENV FFMPEG_VERSION=4.4
+ENV SDL2_VERSION=2.0.22
+ENV BULLET_VERSION=3.17
+ENV MYGUI_VERSION=3.4.3
+ENV GL4ES_VERSION=5ac069d82ad8ca2cc3c574484e4c5bad880db83e
+ENV OSG_VERSION=69cfecebfb6dc703b42e8de39eed750a84a87489
+ENV LZ4_VERSION=1.9.3
+ENV LUAJIT_VERSION=v2.1.0-beta3
+ENV OPENMW_VERSION=19a6fd4e1be0b9928940a575f00d31b5af76beb5
+ENV NDK_VERSION=26.1.10909125
+ENV SDK_CMDLINE_TOOLS=10406996_latest
+ENV JAVA_VERSION=17
+
+# Android API Settings
+ENV API=21
+
+RUN dnf install -y copr-cli dnf-plugins-core && dnf copr enable -y dturner/OpenMW-Deps
+RUN dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+    && dnf install -y unshield unshield-devel mygui mygui-devel unzip openCOLLADA OpenSceneGraph-OMW recastnavigation bullet redhat-lsb-core openal-devel SDL2-devel qt5-qtbase-devel git boost-devel java-$JAVA_VERSION-openjdk\
+    ffmpeg-devel ffmpeg-libs gcc-c++ tinyxml-devel cmake lz4-devel zlib-devel freetype-devel luajit-devel libXt-devel
+
+ENV JAVA_HOME='/usr/lib/jvm/java-17-openjdk-17.0.9.0.9-3.fc39.x86_64'
+
+RUN wget https://dl.google.com/android/repository/commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip && unzip commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip && mkdir -p ~/Android/cmdline-tools/ && mv cmdline-tools/ ~/Android/cmdline-tools/latest && rm commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip
+RUN yes | ~/Android/cmdline-tools/latest/bin/sdkmanager --licenses
+RUN ~/Android/cmdline-tools/latest/bin/sdkmanager --install "ndk;$NDK_VERSION" --channel=0
+COPY --chmod=0755 build.sh /
+COPY --chmod=0755 include /include
+COPY --chmod=0755 patches /patches
+
+
+# Setup ICU
+RUN set -e && mkdir -p $HOME/downloads/ && cd $_ && wget https://github.com/unicode-org/icu/archive/refs/tags/release-$LIBICU_VERSION.zip && unzip release-$LIBICU_VERSION.zip
+RUN mkdir -p $HOME/build/icu-host-build && cd $_ && $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure --disable-tests --disable-samples --disable-icuio --disable-extras CC="gcc" CXX="g++"
+RUN cd $HOME/build/icu-host-build && make -j $(nproc)
+
+# Patch it to ensure gcc is never ever never used
+RUN rm -f $TOOLCHAIN/$NDK_TRIPLET-gcc
+RUN rm -f $TOOLCHAIN/$NDK_TRIPLET-g++
+
+# symlink gcc to clang
+RUN ln -s $NDK_TRIPLET$API-clang ~/$TOOLCHAIN/$NDK_TRIPLET-gcc
+RUN ln -s $NDK_TRIPLET$API-clang++ ~/$TOOLCHAIN/$NDK_TRIPLET-g++
+
+# NDK Toolchain Settings
+ENV TOOLCHAIN=$HOME/Android/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin
+ENV NDK_TRIPLET=aarch64-linux-android
+ENV ABI=arm64-v8a
+ENV AR=$TOOLCHAIN/llvm-ar
+ENV CC=$TOOLCHAIN/$TARGET$API-clang
+ENV AS=$CC
+ENV CXX=$TOOLCHAIN/$TARGET$API-clang++
+ENV LD=$TOOLCHAIN/ld
+ENV RANLIB=$TOOLCHAIN/llvm-ranlib
+ENV STRIP=$TOOLCHAIN/llvm-strip
+
+# Global C, CXX and LDFLAGS
+ENV CFLAGS="-fPIC -O3"
+ENV CXXFLAGS="-fPIC -frtti -fexceptions -O3"
+ENV LDFLAGS="-fPIC -Wl,--undefined-version"
+
+ENV COMMON_AUTOCONF_FLAGS= \
+--enable=static \
+--disable=shared \
+--PREFIX=$prefix
+
+ENV COMMON_CMAKE_ARGS= \
+-DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake \
+-DANDROID_ABI=$ABI \
+-DANDROID_PLATFORM=ANDROID_$API \
+-DANDROID_STL=c++_shared \
+-DANDROID_LD=deprecated \
+-DANDROID_CPP_FEATURES=rtti\ -exceptions \
+-DCMAKE_BUILD_TYPE=debug \
+-DCMAKE_DEBUG_POSTFIX=
+
+ENV LIBICU_FLAGS= \
+--disable=tests \
+--disable=samples \
+--disable=icuio \
+--disable=extras \
+--with-cross-build=$HOME/build/icu-host-build)
+
+# Setup LIBICU
+RUN mkdir -p $HOME/build/icu-prefex && cd $_ && $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure $COMMON_AUTOCONF_FLAGS $LIBICU_FLAGS --build=$NDK_TRIPLET
+
+# Setup LIBPNG_VERSION
+#RUN wget http://prdownloads.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.xz -P ~/downloads
+
+# Setup LIBJPEG_TURBO_VERSION
+#RUN wget https://sourceforge.net/projects/libjpeg-turbo/files/$LIBJPEG_TURBO_VERSION/libjpeg-turbo-$LIBJPEG_TURBO_VERSION.tar.gz -P ~/downloads
+
+# Setup FREETYPE2_VERSION
+#RUN wget https://download.savannah.gnu.org/releases/freetype/freetype-$FREETYPE2_VERSION.tar.gz -P ~/downloads
+
+# Setup OPENAL_VERSION
+#RUN wget https://github.com/kcat/openal-soft/archive/${OPENAL_VERSION}.zip -P ~/downloads
+
+# Setup BOOST_VERSION
+#RUN wget https://github.com/boostorg/boost/releases/download/boost-$BOOST_VERSION/boost-$BOOST_VERSION.zip -P ~/downloads
+
+# Setup FFMPEG_VERSION
+#RUN wget http://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.bz2 -P ~/downloads
+
+# Setup SDL2_VERSION
+#RUN wget https://www.libsdl.org/release/SDL2-$SDL2_VERSION.tar.gz -P ~/downloads
+
+# Setup BULLET_VERSION
+#RUN wget https://github.com/bulletphysics/bullet3/archive/$BULLET_VERSION.zip -P ~/downloads
+
+# Setup GL4ES_VERSION
+#RUN wget https://github.com/ptitSeb/gl4es/archive/$GL4ES_VERSION.zip -P ~/downloads
+
+# Setup MYGUI_VERSION
+#RUN wget https://github.com/MyGUI/mygui/archive/MyGUI$MYGUI_VERSION.zip -P ~/downloads
+
+# Setup LZ4_VERSION
+#RUN wget https://github.com/lz4/lz4/archive/v$LZ4_VERSION.zip -P ~/downloads
+
+# Setup LUAJIT_VERSION
+#RUN wget https://github.com/luaJit/LuaJIT/archive/$LUAJIT_VERSION.zip -P ~/downloads
+
+# Setup ZLIB_VERSION
+#RUN wget https://github.com/madler/zlib/releases/download/v1.3/zlib13.zip -P ~/downloads
+
+# Setup LIBXML_VERSION
+#RUN wget https://github.com/GNOME/libxml2/archive/refs/tags/v2.12.2.zip -P ~/downloads
+
+# Setup LIBCOLLADA_VERSION
+#RUN wget https://github.com/rdiankov/collada-dom/archive/v2.5.0.zip -P ~/downloads
+
+# Setup OPENSCENEGRAPH_VERSION
+#RUN wget https://github.com/openmw/osg/archive/$OSG_VERSION.zip -P ~/downloads
+
+# Setup OPENMW_VERSION
+#RUN wget https://github.com/OpenMW/openmw/archive/$OPENMW_VERSION.zip -P ~/downloads
