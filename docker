@@ -35,9 +35,9 @@ ENV JAVA_HOME='/usr/lib/jvm/java-17-openjdk-17.0.9.0.9-3.fc39.x86_64'
 RUN wget https://dl.google.com/android/repository/commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip && unzip commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip && mkdir -p ~/Android/cmdline-tools/ && mv cmdline-tools/ ~/Android/cmdline-tools/latest && rm commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip
 RUN yes | ~/Android/cmdline-tools/latest/bin/sdkmanager --licenses
 RUN ~/Android/cmdline-tools/latest/bin/sdkmanager --install "ndk;$NDK_VERSION" --channel=0
-COPY --chmod=0755 build.sh /
-COPY --chmod=0755 include /include
-COPY --chmod=0755 patches /patches
+# COPY --chmod=0755 build.sh /
+# COPY --chmod=0755 include /include
+# COPY --chmod=0755 patches /patches
 
 
 # Setup ICU
