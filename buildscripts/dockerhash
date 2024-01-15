@@ -1,0 +1,182 @@
+# syntax=docker/dockerfile:labs
+FROM fedora:39
+
+# Global C, CXX and LDFLAGS
+ENV CFLAGS="-fPIC -O3"
+ENV CXXFLAGS="-fPIC -frtti -fexceptions -O3"
+ENV LDFLAGS="-fPIC -Wl,--undefined-version"
+
+# NDK Clang settings start at line 56
+
+# App versions - change settings here
+ENV LIBJPEG_TURBO_VERSION=1.5.3
+ENV LIBJPEG_CHECKSUM=e995218c2f830896bfa614bf91e0c7c246d8f206d90aa159c7dacdea541ed0b2
+
+ENV LIBPNG_VERSION=1.6.37
+ENV LIBPNG_CHECKSUM=895bf72c14c0121e1e9471a61377f438d909b5563abef8c684eac7282fcff12f
+
+ENV FREETYPE2_VERSION=2.10.4
+ENV FREETYPE2_CHECKSUM=5eab795ebb23ac77001cfb68b7d4d50b5d6c7469247b0b01b2c953269f658dac
+
+ENV OPENAL_VERSION=1.21.1
+ENV OPENAL_CHECKSUM=8ac17e4e3b32c1af3d5508acfffb838640669b4274606b7892aa796ca9d7467f
+
+ENV BOOST_VERSION=1.83.0
+ENV BOOST_CHECKSUM=0c6049764e80aa32754acd7d4f179fd5551d8172a83b71532ae093e7384e98da
+
+ENV LIBICU_VERSION=70-1
+ENV LIBICU_CHECKSUM=
+
+ENV FFMPEG_VERSION=4.4
+ENV FFMPEG_CHECKSUM=42093549751b582cf0f338a21a3664f52e0a9fbe0d238d3c992005e493607d0e
+
+ENV SDL2_VERSION=2.0.22
+ENV SDL2_CHECKSUM=fe7cbf3127882e3fc7259a75a0cb585620272c51745d3852ab9dd87960697f2e
+
+ENV BULLET_VERSION=3.17
+ENV BULLET_CHECKSUM=baa642c906576d4d98d041d0acb80d85dd6eff6e3c16a009b1abf1ccd2bc0a61
+
+ENV MYGUI_VERSION=3.4.3
+ENV MYGUI_CHECKSUM=33c91b531993047e77cace36d6fea73634b8c17bd0ed193d4cd12ac7c6328abd
+
+ENV GL4ES_VERSION=5ac069d82ad8ca2cc3c574484e4c5bad880db83e
+ENV GL4ES_CHECKSUM=60ee788c2b43a5a25cd1a8a0071a77e957f2d5ff070eda5c39eb120d1ad2c3ea
+
+ENV OSG_VERSION=69cfecebfb6dc703b42e8de39eed750a84a87489
+ENV OSG_CHECKSUM=aea196550f02974d6d09291c5d83b51ca6a03b3767e234a8c0e21322927d1e12
+
+ENV LZ4_VERSION=1.9.3
+ENV LZ4_CHECKSUM=030644df4611007ff7dc962d981f390361e6c97a34e5cbc393ddfbe019ffe2c1
+
+ENV LUAJIT_VERSION=v2.1.0-beta3
+ENV LUAJIT_CHECKSUM=409f7fe570d3c16558e594421c47bdd130238323c9d6fd6c83dedd2aaeb082a8
+
+ENV OPENMW_VERSION=19a6fd4e1be0b9928940a575f00d31b5af76beb5
+ENV OPENMW_CHECKSUM=0939845b23de466e90401ba47a8d4d55d9ca7061118867c1f316adaccd4a0eaa
+
+ENV NDK_VERSION=26.1.10909125
+ENV SDK_CMDLINE_TOOLS=10406996_latest
+ENV JAVA_VERSION=17
+
+# Android API Settings
+ENV API=21
+
+RUN dnf install -y copr-cli dnf-plugins-core && dnf copr enable -y dturner/OpenMW-Deps
+RUN dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+    && dnf install -y unshield unshield-devel mygui mygui-devel unzip openCOLLADA OpenSceneGraph-OMW recastnavigation bullet redhat-lsb-core openal-devel SDL2-devel nano qt5-qtbase-devel git boost-devel java-$JAVA_VERSION-openjdk\
+    ffmpeg-devel ffmpeg-libs gcc-c++ tinyxml-devel cmake lz4-devel zlib-devel freetype-devel luajit-devel libXt-devel
+
+ENV JAVA_HOME='/usr/lib/jvm/java-17-openjdk-17.0.9.0.9-3.fc39.x86_64'
+
+RUN wget https://dl.google.com/android/repository/commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip && unzip commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip && mkdir -p ~/Android/cmdline-tools/ && mv cmdline-tools/ ~/Android/cmdline-tools/latest && rm commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip
+RUN yes | ~/Android/cmdline-tools/latest/bin/sdkmanager --licenses
+RUN ~/Android/cmdline-tools/latest/bin/sdkmanager --install "ndk;$NDK_VERSION" --channel=0
+#COPY --chmod=0755 build.sh /
+#COPY --chmod=0755 include /include
+#COPY --chmod=0755 patches /patches
+
+
+# Setup ICU
+RUN set -e && mkdir -p $HOME/downloads/ && cd $_ && wget https://github.com/unicode-org/icu/archive/refs/tags/release-$LIBICU_VERSION.zip && unzip release-$LIBICU_VERSION.zip
+RUN mkdir -p $HOME/build/icu-host-build && cd $_ && $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure --disable-tests --disable-samples --disable-icuio --disable-extras CC="gcc" CXX="g++"
+RUN cd $HOME/build/icu-host-build && make -j $(nproc)
+
+# NDK Toolchain Settings
+ENV TOOLCHAIN=/root/Android/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin
+ENV NDK_TRIPLET=aarch64-linux-android
+ENV TARGET=armv7a-linux-androideabi
+ENV ABI=arm64-v8a
+ENV AR=$TOOLCHAIN/llvm-ar
+ENV AS=$CC
+ENV PLATFORM=android
+ENV LD=$TOOLCHAIN/ld
+ENV RANLIB=$TOOLCHAIN/llvm-ranlib
+ENV STRIP=$TOOLCHAIN/llvm-strip
+
+# Patch it to ensure gcc is never ever never used
+RUN rm -f $TOOLCHAIN/$NDK_TRIPLET-gcc
+RUN rm -f $TOOLCHAIN/$NDK_TRIPLET-g++
+
+# symlink gcc to clang
+RUN ln -s $NDK_TRIPLET$API-clang /$TOOLCHAIN/$NDK_TRIPLET-gcc
+RUN ln -s $NDK_TRIPLET$API-clang++ /$TOOLCHAIN/$NDK_TRIPLET-g++
+
+
+ENV CC=$TOOLCHAIN/$TARGET$API-clang
+ENV CXX=$TOOLCHAIN/$TARGET$API-clang++
+
+ENV COMMON_AUTOCONF_FLAGS= \
+--enable=static \
+--disable=shared \
+--PREFIX=$prefix
+
+ENV COMMON_CMAKE_ARGS= \
+-DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake \
+-DANDROID_ABI=$ABI \
+-DANDROID_PLATFORM=ANDROID_$API \
+-DANDROID_STL=c++_shared \
+-DANDROID_LD=deprecated \
+-DANDROID_CPP_FEATURES=rtti\ -exceptions \
+-DCMAKE_BUILD_TYPE=debug \
+-DCMAKE_DEBUG_POSTFIX=
+
+ENV LIBICU_FLAGS= \
+--disable=tests \
+--disable=samples \
+--disable=icuio \
+--disable=extras \
+--with-cross-build=/root/build/icu-host-build
+
+# Setup LIBICU
+RUN mkdir -p /root/build/icu-prefix && cd $_ && /root/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure --with-cross-build=/root/build/icu-host-build $COMMON_CMAKE_ARGS $LIBICU_FLAGS --host=armv7a-androideabi-linux
+
+# Setup LIBPNG_VERSION
+ADD --checksum=sha256:$LIBPNG_CHECKSUM http://prdownloads.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.xz /root/downloads/
+
+# Setup LIBJPEG_TURBO_VERSION
+ADD --checksum=sha256:$LIBJPEG_CHECKSUM https://sourceforge.net/projects/libjpeg-turbo/files/$LIBJPEG_TURBO_VERSION/libjpeg-turbo-$LIBJPEG_TURBO_VERSION.tar.gz /root/downloads/
+
+# Setup FREETYPE2_VERSION
+ADD --checksum=sha256:$FREETYPE2_CHECKSUM https://download.savannah.gnu.org/releases/freetype/freetype-$FREETYPE2_VERSION.tar.gz /root/downloads/
+
+# Setup OPENAL_VERSION
+ADD --checksum=sha256:$OPENAL_CHECKSUM https://github.com/kcat/openal-soft/archive/${OPENAL_VERSION}.tar.gz /root/downloads/
+
+# Setup BOOST_VERSION
+ADD --checksum=sha256:$BOOST_CHECKSUM https://github.com/boostorg/boost/releases/download/boost-$BOOST_VERSION/boost-$BOOST_VERSION.tar.gz /root/downloads/
+
+# Setup FFMPEG_VERSION
+ADD --checksum=sha256:$FFMPEG_CHECKSUM http://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.bz2 /root/downloads/
+
+# Setup SDL2_VERSION
+ADD --checksum=sha256:$SDL2_CHECKSUM https://www.libsdl.org/release/SDL2-$SDL2_VERSION.tar.gz /root/downloads/
+
+# Setup BULLET_VERSION
+ADD --checksum=sha256:$BULLET_CHECKSUM https://github.com/bulletphysics/bullet3/archive/$BULLET_VERSION.tar.gz /root/downloads/
+
+# Setup GL4ES_VERSION
+ADD --checksum=sha256:$GL4ES_CHECKSUM https://github.com/ptitSeb/gl4es/archive/$GL4ES_VERSION.tar.gz /root/downloads/
+
+# Setup MYGUI_VERSION
+ADD --checksum=sha256:$MYGUI_CHECKSUM https://github.com/MyGUI/mygui/archive/MyGUI$MYGUI_VERSION.tar.gz /root/downloads/
+
+# Setup LZ4_VERSION
+ADD --checksum=sha256:$LZ4_CHECKSUM https://github.com/lz4/lz4/archive/v$LZ4_VERSION.tar.gz /root/downloads/
+
+# Setup LUAJIT_VERSION
+ADD --checksum=sha256:$LUAJIT_CHECKSUM https://github.com/luaJit/LuaJIT/archive/$LUAJIT_VERSION.tar.gz /root/downloads/
+
+# Setup ZLIB_VERSION
+ADD https://github.com/madler/zlib/releases/download/v1.3/zlib-1.3.tar.gz /root/downloads/
+
+# Setup LIBXML_VERSION
+ADD https://github.com/GNOME/libxml2/archive/refs/tags/v2.12.2.tar.gz /root/downloads/
+
+# Setup LIBCOLLADA_VERSION
+ADD https://github.com/rdiankov/collada-dom/archive/v2.5.0.tar.gz /root/downloads/
+
+# Setup OPENSCENEGRAPH_VERSION
+ADD --checksum=sha256:$OSG_CHECKSUM https://github.com/openmw/osg/archive/$OSG_VERSION.tar.gz /root/downloads/
+
+# Setup OPENMW_VERSION
+ADD --checksum=sha256:$OPENMW_CHECKSUM https://github.com/OpenMW/openmw/archive/$OPENMW_VERSION.tar.gz /root/downloads/
