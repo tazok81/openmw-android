@@ -1,11 +1,6 @@
 # syntax=docker/dockerfile:labs
 FROM fedora:39
 
-# Global C, CXX and LDFLAGS
-ENV CFLAGS="-fPIC -O3"
-ENV CXXFLAGS="-fPIC -frtti -fexceptions -O3"
-ENV LDFLAGS="-fPIC -Wl,--undefined-version"
-
 # NDK Clang settings start at line 56
 
 # App versions - change settings here
@@ -22,7 +17,7 @@ ENV MYGUI_VERSION=3.4.3
 ENV GL4ES_VERSION=5ac069d82ad8ca2cc3c574484e4c5bad880db83e
 ENV OSG_VERSION=69cfecebfb6dc703b42e8de39eed750a84a87489
 ENV LZ4_VERSION=1.9.3
-ENV LUAJIT_VERSION=v2.1.0-beta3
+ENV LUAJIT_VERSION=2.1.ROLLING
 ENV OPENMW_VERSION=19a6fd4e1be0b9928940a575f00d31b5af76beb5
 ENV NDK_VERSION=26.1.10909125
 ENV SDK_CMDLINE_TOOLS=10406996_latest
@@ -70,37 +65,51 @@ RUN rm -f $TOOLCHAIN/$NDK_TRIPLET-g++
 RUN ln -s $NDK_TRIPLET$API-clang /$TOOLCHAIN/$NDK_TRIPLET-gcc
 RUN ln -s $NDK_TRIPLET$API-clang++ /$TOOLCHAIN/$NDK_TRIPLET-g++
 
+# Global C, CXX and LDFLAGS
+ENV CFLAGS="-fPIC -O3"
+ENV CXXFLAGS="-fPIC -frtti -fexceptions -O3"
+ENV LDFLAGS="-fPIC -Wl,--undefined-version"
 
 ENV CC=$TOOLCHAIN/$TARGET$API-clang
 ENV CXX=$TOOLCHAIN/$TARGET$API-clang++
 
-ENV COMMON_AUTOCONF_FLAGS= \
+ENV COMMON_AUTOCONF_FLAGS=\
 --enable=static \
---disable=shared \
---PREFIX=$prefix
+--disable=shared
 
-ENV COMMON_CMAKE_ARGS= \
--DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake \
--DANDROID_ABI=$ABI \
+ENV COMMON_CMAKE_ARGS=;\
+-DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake; \
+-DANDROID_ABI=$ABI; \
 -DANDROID_PLATFORM=ANDROID_$API \
 -DANDROID_STL=c++_shared \
 -DANDROID_LD=deprecated \
 -DANDROID_CPP_FEATURES=rtti\ -exceptions \
 -DCMAKE_BUILD_TYPE=debug \
--DCMAKE_DEBUG_POSTFIX=
+-DCMAKE_DEBUG_POSTFIX= \
+-DCMAKE_C_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I$prefix/include/\ $CFLAGS \
+-DCMAKE_CXX_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I$prefix/include/\ $CXXFLAGS
 
-ENV LIBICU_FLAGS= \
+ENV COMMON_NDK_BUILD_FLAGS=\
+NDK_PROJECT_PATH=. \
+APP_BUILD_SCRIPT=<SOURCE_DIR>/Android.mk \
+APP_PLATFORM=${android_platform} \
+APP_ABI=${app_abi} \
+APP_LD=deprecated LOCAL_LDFLAGS=$ENV{LDFLAGS}
+
+ENV LIBICU_FLAGS=\
 --disable=tests \
 --disable=samples \
 --disable=icuio \
---disable=extras
+--disable=extras \
+--with-cross-build=/root/build/icu-host-build \
+--host=$TARGET
 
 # Setup LIBICU
-RUN mkdir -p /root/build/icu-prefix && cd $_ && /root/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure --with-cross-build=/root/build/icu-host-build $COMMON_CMAKE_ARGS $LIBICU_FLAGS --host=armv7a-androideabi-linux
+RUN mkdir -p $HOME/build/icu-prefix && cd $_ && unzip $HOME/downloads/release-$LIBICU_VERSION.zip && $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure --enable-static --disable-shared --disable-tests --disable-samples --disable-icuio --disable-extras --with-cross-build=/root/build/icu-host-build --host=$TARGET
 
 # Setup ZLIB_VERSION
 ADD https://github.com/madler/zlib/releases/download/v1.3/zlib-1.3.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/zlib-1.3.tar.gz -C /root/build/ && mkdir -p /root/build/zlib-1.3/build && cd $_ && cmake ../ $COMMON_CMAKE_ARGS && make && make install
+RUN tar xvzf /root/downloads/zlib-1.3.tar.gz -C /root/build/ && mkdir -p /root/build/zlib-1.3/build && cd $_ && cmake ../ $COMMON_CMAKE_ARGS
 
 # Setup LIBPNG_VERSION
 ADD http://prdownloads.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.gz /root/downloads/
@@ -143,11 +152,21 @@ RUN tar xvzf /root/downloads/MyGUI$MYGUI_VERSION.tar.gz -C /root/build/
 
 # Setup LZ4_VERSION
 ADD https://github.com/lz4/lz4/archive/v$LZ4_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/v$LZ4_VERSION.tar.gz -C /root/build/
+RUN tar xvzf /root/downloads/v$LZ4_VERSION.tar.gz -C /root/build/ && cd $HOME/build/lz4-$LZ4_VERSION && \
+cmake build/cmake -DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake -DANDROID_ABI=$ABI -DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=OFF && make && make install
+
+#ENV LUAJIT_MAKE_FLAGS=\
+#HOST_CC=gcc -m64 \
+#CFLAGS= \
+#TARGET_CFLAGS=$CFLAGS \
+#CROSS=llvm- \
+#STATIC_CC=$NDK_TRIPLET-clang \
+#DYNAMIC_CC=$NDK_TRIPLET-clang\ -fPIC \
+#TARGET_LD=$NDK_TRIPLET-clang
 
 # Setup LUAJIT_VERSION
-ADD https://github.com/luaJit/LuaJIT/archive/$LUAJIT_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/$LUAJIT_VERSION.tar.gz -C /root/build/
+ADD https://github.com/luaJit/LuaJIT/archive/v$LUAJIT_VERSION.tar.gz /root/downloads/
+#RUN tar xvzf /root/downloads/v$LUAJIT_VERSION.tar.gz -C /root/build/ && cd /root/build/LuaJIT-$LUAJIT_VERSION && make amalg HOST_CC=gcc -m64 CFLAGS= TARGET_CFLAGS=$CFLAGS CROSS=llvm- STATIC_CC=$NDK_TRIPLET-clang DYNAMIC_CC=$NDK_TRIPLET-clang -fPIC TARGET_LD=$NDK_TRIPLET-clang
 
 # Setup LIBXML_VERSION
 ADD https://github.com/GNOME/libxml2/archive/refs/tags/v2.12.2.tar.gz /root/downloads/
