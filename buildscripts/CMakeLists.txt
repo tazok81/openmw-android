@@ -134,7 +134,7 @@ if (${ARCH} STREQUAL "x86")
 endif()
 
 ExternalProject_Add(libjpeg-turbo
-	URL https://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG_TURBO_VERSION}/libjpeg-turbo-${LIBJPEG_TURBO_VERSION}.tar.gz/download
+	URL https://sourceforge.net/projects/libjpeg-turbo/files/${LIBJPEG_TURBO_VERSION}/libjpeg-turbo-${LIBJPEG_TURBO_VERSION}.tar.gz
 	URL_HASH ${LIBJPEG_TURBO_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
