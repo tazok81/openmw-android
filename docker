@@ -21,6 +21,7 @@ ENV LUAJIT_VERSION=2.1.ROLLING
 ENV OPENMW_VERSION=19a6fd4e1be0b9928940a575f00d31b5af76beb5
 ENV NDK_VERSION=26.1.10909125
 ENV SDK_CMDLINE_TOOLS=10406996_latest
+ENV PLATFORM_TOOLS_VERSION=29.0.0
 ENV JAVA_VERSION=17
 
 # Android API Settings
@@ -28,23 +29,50 @@ ENV API=21
 
 RUN dnf install -y copr-cli dnf-plugins-core && dnf copr enable -y dturner/OpenMW-Deps
 RUN dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
-    && dnf install -y xz unshield bzip2 unshield-devel mygui mygui-devel unzip openCOLLADA OpenSceneGraph-OMW recastnavigation bullet redhat-lsb-core doxygen openal-devel SDL2-devel qt5-qtbase-devel git boost-devel java-$JAVA_VERSION-openjdk\
+    && dnf install -y xz unshield bzip2 unshield-devel mygui mygui-devel unzip openCOLLADA OpenSceneGraph-OMW recastnavigation bullet redhat-lsb-core doxygen openal-devel SDL2-devel qt5-qtbase-devel nano git boost-devel java-$JAVA_VERSION-openjdk\
     ffmpeg-devel ffmpeg-libs gcc-c++ tinyxml-devel cmake lz4-devel zlib-devel freetype-devel luajit-devel libXt-devel
 
 ENV JAVA_HOME='/usr/lib/jvm/java-17-openjdk-17.0.9.0.9-3.fc39.x86_64'
 
+
 RUN wget https://dl.google.com/android/repository/commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip && unzip commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip && mkdir -p ~/Android/cmdline-tools/ && mv cmdline-tools/ ~/Android/cmdline-tools/latest && rm commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip
 RUN yes | ~/Android/cmdline-tools/latest/bin/sdkmanager --licenses
 RUN ~/Android/cmdline-tools/latest/bin/sdkmanager --install "ndk;$NDK_VERSION" --channel=0
+RUN ~/Android/cmdline-tools/latest/bin/sdkmanager --install "build-tools;$PLATFORM_TOOLS_VERSION"
 #COPY --chmod=0755 build.sh /
-#COPY --chmod=0755 include /include
+COPY --chmod=0755 openmw-android /openmw-android
 #COPY --chmod=0755 patches /patches
 
+ENV PATH=$PATH:~/Android/cmdline-tools/latest/bin/
+ENV PATH=$PATH:~/Android/platform-tools/
+ENV PATH=$PATH:~/Android/ndk/$NDK_VERSION/
 
 # Setup ICU
 RUN set -e && mkdir -p $HOME/downloads/ && cd $_ && wget https://github.com/unicode-org/icu/archive/refs/tags/release-$LIBICU_VERSION.zip && unzip release-$LIBICU_VERSION.zip
 RUN mkdir -p $HOME/build/icu-host-build && cd $_ && $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure --disable-tests --disable-samples --disable-icuio --disable-extras CC="gcc" CXX="g++"
 RUN cd $HOME/build/icu-host-build && make -j $(nproc)
+
+
+#RUN set -e && cd /openmw-android/app/src/main
+
+# set up fake "jni" so that ndk-gdb can find a "valid" Android.mk
+RUN mkdir -p /openmw-android/app/src/main/jni
+RUN echo LOCAL_PATH := $(call my-dir) > /openmw-android/app/src/main/jni/Android.mk
+RUN echo include $(CLEAR_VARS) > /openmw-android/app/src/main/jni/Android.mk
+RUN echo LOCAL_MODULE := openmw-android > /openmw-android/app/src/main/jni/Android.mk
+
+#RUN echo "APP_ABI := $ABI" > jni/Android.mk
+
+#RUN rm -f gdb.exec
+#RUN echo "shell rm -rf jni" >> gdb.exec
+#RUN echo "set solib-search-path ../../../buildscripts/symbols/$ABI/" >> gdb.exec
+#RUN echo "set history save on" >> gdb.exec
+#RUN echo "set breakpoint pending on" >> gdb.exec
+
+#RUN ndk-gdb --attach is.xyz.omw_nightly.debug -x "gdb.exec"
+
+
+
 
 # NDK Toolchain Settings
 ENV TOOLCHAIN=/root/Android/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin
@@ -65,44 +93,25 @@ RUN rm -f $TOOLCHAIN/$NDK_TRIPLET-g++
 RUN ln -s $NDK_TRIPLET$API-clang /$TOOLCHAIN/$NDK_TRIPLET-gcc
 RUN ln -s $NDK_TRIPLET$API-clang++ /$TOOLCHAIN/$NDK_TRIPLET-g++
 
+
 # Global C, CXX and LDFLAGS
 ENV CFLAGS="-fPIC -O3"
 ENV CXXFLAGS="-fPIC -frtti -fexceptions -O3"
 ENV LDFLAGS="-fPIC -Wl,--undefined-version"
 
-ENV CC=$TOOLCHAIN/$TARGET$API-clang
-ENV CXX=$TOOLCHAIN/$TARGET$API-clang++
+#ENV NDKCC=$TOOLCHAIN/$TARGET$API-clang
+#ENV NDKCXX=$TOOLCHAIN/$TARGET$API-clang++
+#ENV NDK_CXX=$NDK_TRIPLET-clang++
+#ENV NDK_CC=$NDK_TRIPLET-clang
+#ENV WRAPPER_COMMAND=CC=$NDK_TRIPLET-clang CXX=$NDK_TRIPLET-clang++ PATH=/root/Android/ndk/$NDK_VERSION/
 
-ENV COMMON_AUTOCONF_FLAGS=\
---enable=static \
---disable=shared
+#ENV COMMON_AUTOCONF_FLAGS=--enable=static --disable=shared
 
-ENV COMMON_CMAKE_ARGS=;\
--DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake; \
--DANDROID_ABI=$ABI; \
--DANDROID_PLATFORM=ANDROID_$API \
--DANDROID_STL=c++_shared \
--DANDROID_LD=deprecated \
--DANDROID_CPP_FEATURES=rtti\ -exceptions \
--DCMAKE_BUILD_TYPE=debug \
--DCMAKE_DEBUG_POSTFIX= \
--DCMAKE_C_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I$prefix/include/\ $CFLAGS \
--DCMAKE_CXX_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I$prefix/include/\ $CXXFLAGS
+ENV NDK_BUILD_FLAGS=NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=/openmw-android/app/src/main/jni/Android.mk APP_PLATFORM=ANDROID_$API APP_ABI=$ABI APP_LD=deprecated LOCAL_LDFLAGS=$LDFLAGS
 
-ENV COMMON_NDK_BUILD_FLAGS=\
-NDK_PROJECT_PATH=. \
-APP_BUILD_SCRIPT=<SOURCE_DIR>/Android.mk \
-APP_PLATFORM=${android_platform} \
-APP_ABI=${app_abi} \
-APP_LD=deprecated LOCAL_LDFLAGS=$ENV{LDFLAGS}
+#ENV LIBICU_FLAGS=--disable-tests --disable-samples --disable-icuio --disable-extras --with-cross-build=/root/build/icu-host-build --host-$TARGET
 
-ENV LIBICU_FLAGS=\
---disable=tests \
---disable=samples \
---disable=icuio \
---disable=extras \
---with-cross-build=/root/build/icu-host-build \
---host=$TARGET
+ENV COMMON_CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake -DANDROID_ABI=$ABI -DANDROID_PLATFORM=ANDROID_$API -DANDROID_STL=c++_shared -DANDROID_LD=deprecated -DANDROID_CPP_FEATURES=rtti\ -exceptions -DCMAKE_BUILD_TYPE=debug -DCMAKE_DEBUG_POSTFIX=
 
 # Setup LIBICU
 RUN mkdir -p $HOME/build/icu-prefix && cd $_ && unzip $HOME/downloads/release-$LIBICU_VERSION.zip && $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure --enable-static --disable-shared --disable-tests --disable-samples --disable-icuio --disable-extras --with-cross-build=/root/build/icu-host-build --host=$TARGET
@@ -120,19 +129,23 @@ RUN cd /root/build/ && git clone https://github.com/Duron27/libjpeg-turbo && mkd
 
 # Setup FREETYPE2_VERSION
 ADD https://download.savannah.gnu.org/releases/freetype/freetype-$FREETYPE2_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/freetype-$FREETYPE2_VERSION.tar.gz -C /root/build/
+#RUN tar xvzf /root/downloads/freetype-$FREETYPE2_VERSION.tar.gz -C /root/build/ && cd /root/build/freetype-$FREETYPE2_VERSION/ && ./configure $COMMON_CMAKE_ARGS --with-png=no && make && make install
 
 # Setup OPENAL_VERSION
 ADD https://github.com/kcat/openal-soft/archive/$OPENAL_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/$OPENAL_VERSION.tar.gz -C /root/build/
+RUN tar xvzf /root/downloads/$OPENAL_VERSION.tar.gz -C /root/build/ && cd /root/build/openal-soft-$OPENAL_VERSION/build && cmake ../ $COMMON_CMAKE_ARGS -DALSOFT_EXAMPLES=OFF -DALSOFT_COMMON_CMAKE_ARGSS=OFF -DALSOFT_UTILS=OFF -DALSOFT_NO_CONFIG_UTIL=ON -DALSOFT_BACKEND_OPENSL=ON -DALSOFT_BACKEND_WAVE=OFF
+#RUN cd /root/build/openal-soft-$OPENAL_VERSION/build && make && make install
+
+#ARG BOOST_FLAGS=-j4 --with-filesystem --with-program_options --with-system --with-iostreams --with-regex --ignore-site-config toolset=clang architecture=${BOOST_ARCH} address-model=${BOOST_ADDRESS_MODEL} cflags=$ENV{CFLAGS} cxxflags=$ENV{CXXFLAGS} variant=release target-os=android threading=multi threadapi=pthread link=static runtime-link=static install COMMAND llvm-ranlib ${prefix}/lib/libboost_filesystem.a COMMAND llvm-ranlib ${prefix}/lib/libboost_program_options.a COMMAND llvm-ranlib ${prefix}/lib/libboost_system.a COMMAND llvm-ranlib ${prefix}/lib/libboost_iostreams.a COMMAND llvm-ranlib ${prefix}/lib/libboost_regex.a
 
 # Setup BOOST_VERSION
 ADD https://github.com/boostorg/boost/releases/download/boost-$BOOST_VERSION/boost-$BOOST_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/boost-$BOOST_VERSION.tar.gz -C /root/build/
+RUN tar xvzf /root/downloads/boost-$BOOST_VERSION.tar.gz -C /root/build/ && cd /root/build/boost-$BOOST_VERSION
+#RUN ./bootstrap.sh && ./b2 -j4 --with-filesystem --with-program_options --with-system --with-iostreams --with-regex --ignore-site-config toolset=clang architecture=${BOOST_ARCH} address-model=${BOOST_ADDRESS_MODEL} cflags=$ENV{CFLAGS} cxxflags=$ENV{CXXFLAGS} variant=release target-os=android threading=multi threadapi=pthread link=static runtime-link=static install COMMAND llvm-ranlib ${prefix}/lib/libboost_filesystem.a COMMAND llvm-ranlib ${prefix}/lib/libboost_program_options.a COMMAND llvm-ranlib ${prefix}/lib/libboost_system.a COMMAND llvm-ranlib ${prefix}/lib/libboost_iostreams.a COMMAND llvm-ranlib ${prefix}/lib/libboost_regex.a
 
 # Setup FFMPEG_VERSION
-ADD http://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.bz2 /root/downloads/
-RUN tar xjf /root/downloads/ffmpeg-$FFMPEG_VERSION.tar.bz2 -C /root/build/
+#ADD http://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.bz2 /root/downloads/
+#RUN tar xjf /root/downloads/ffmpeg-$FFMPEG_VERSION.tar.bz2 -C /root/build/
 
 # Setup SDL2_VERSION
 ADD https://www.libsdl.org/release/SDL2-$SDL2_VERSION.tar.gz /root/downloads/
@@ -152,8 +165,7 @@ RUN tar xvzf /root/downloads/MyGUI$MYGUI_VERSION.tar.gz -C /root/build/
 
 # Setup LZ4_VERSION
 ADD https://github.com/lz4/lz4/archive/v$LZ4_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/v$LZ4_VERSION.tar.gz -C /root/build/ && cd $HOME/build/lz4-$LZ4_VERSION && \
-cmake build/cmake -DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake -DANDROID_ABI=$ABI -DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=OFF && make && make install
+RUN tar xvzf /root/downloads/v$LZ4_VERSION.tar.gz -C /root/build/ && cd $HOME/build/lz4-$LZ4_VERSION && cmake build/cmake -DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake -DANDROID_ABI=$ABI -DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=OFF && make && make install
 
 #ENV LUAJIT_MAKE_FLAGS=\
 #HOST_CC=gcc -m64 \
