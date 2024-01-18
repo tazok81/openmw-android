@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:labs
 FROM fedora:39
 
-# NDK Clang settings start at line 56
+# NDK Clang settings start at line 71
 
 # App versions - change settings here
 ENV LIBJPEG_TURBO_VERSION=1.5.3
 ENV LIBPNG_VERSION=1.6.37
-ENV FREETYPE2_VERSION=2.10.4
+ENV FREETYPE2_VERSION=2-10-4
 ENV OPENAL_VERSION=1.21.1
 ENV BOOST_VERSION=1.83.0
 ENV LIBICU_VERSION=70-1
@@ -14,8 +14,8 @@ ENV FFMPEG_VERSION=4.4
 ENV SDL2_VERSION=2.0.22
 ENV BULLET_VERSION=3.17
 ENV MYGUI_VERSION=3.4.3
-ENV GL4ES_VERSION=5ac069d82ad8ca2cc3c574484e4c5bad880db83e
-ENV OSG_VERSION=69cfecebfb6dc703b42e8de39eed750a84a87489
+ENV GL4ES_VERSION=1.1.4
+ENV OSG_VERSION=3.6.0
 ENV LZ4_VERSION=1.9.3
 ENV LUAJIT_VERSION=2.1.ROLLING
 ENV OPENMW_VERSION=19a6fd4e1be0b9928940a575f00d31b5af76beb5
@@ -34,7 +34,6 @@ RUN dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-re
 
 ENV JAVA_HOME='/usr/lib/jvm/java-17-openjdk-17.0.9.0.9-3.fc39.x86_64'
 
-
 RUN wget https://dl.google.com/android/repository/commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip && unzip commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip && mkdir -p ~/Android/cmdline-tools/ && mv cmdline-tools/ ~/Android/cmdline-tools/latest && rm commandlinetools-linux-$SDK_CMDLINE_TOOLS.zip
 RUN yes | ~/Android/cmdline-tools/latest/bin/sdkmanager --licenses
 RUN ~/Android/cmdline-tools/latest/bin/sdkmanager --install "ndk;$NDK_VERSION" --channel=0
@@ -52,7 +51,6 @@ RUN set -e && mkdir -p $HOME/downloads/ && cd $_ && wget https://github.com/unic
 RUN mkdir -p $HOME/build/icu-host-build && cd $_ && $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure --disable-tests --disable-samples --disable-icuio --disable-extras CC="gcc" CXX="g++"
 RUN cd $HOME/build/icu-host-build && make -j $(nproc)
 
-
 #RUN set -e && cd /openmw-android/app/src/main
 
 # set up fake "jni" so that ndk-gdb can find a "valid" Android.mk
@@ -68,11 +66,7 @@ RUN echo LOCAL_MODULE := openmw-android > /openmw-android/app/src/main/jni/Andro
 #RUN echo "set solib-search-path ../../../buildscripts/symbols/$ABI/" >> gdb.exec
 #RUN echo "set history save on" >> gdb.exec
 #RUN echo "set breakpoint pending on" >> gdb.exec
-
 #RUN ndk-gdb --attach is.xyz.omw_nightly.debug -x "gdb.exec"
-
-
-
 
 # NDK Toolchain Settings
 ENV TOOLCHAIN=/root/Android/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64/bin
@@ -93,11 +87,23 @@ RUN rm -f $TOOLCHAIN/$NDK_TRIPLET-g++
 RUN ln -s $NDK_TRIPLET$API-clang /$TOOLCHAIN/$NDK_TRIPLET-gcc
 RUN ln -s $NDK_TRIPLET$API-clang++ /$TOOLCHAIN/$NDK_TRIPLET-g++
 
-
 # Global C, CXX and LDFLAGS
 ENV CFLAGS="-fPIC -O3"
 ENV CXXFLAGS="-fPIC -frtti -fexceptions -O3"
 ENV LDFLAGS="-fPIC -Wl,--undefined-version"
+
+ENV COMMON="-DCMAKE_TOOLCHAIN_FILE=${CMAKE_SOURCE_DIR}/toolchain/ndk/build/cmake/android.toolchain.cmake \
+	-DANDROID_ABI=${app_abi} \
+	-DANDROID_PLATFORM=${android_platform} \
+	-DANDROID_STL=c++_shared \
+	-DANDROID_CPP_FEATURES=rtti\ exceptions \
+	-DCMAKE_C_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/include/\ $ENV{CFLAGS} \
+	-DCMAKE_CXX_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/include/\ $ENV{CXXFLAGS} \
+	-DCMAKE_SHARED_LINKER_FLAGS=$ENV{LDFLAGS} \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+	-DCMAKE_DEBUG_POSTFIX= \
+	-DCMAKE_INSTALL_PREFIX=${prefix} \
+	-DCMAKE_FIND_ROOT_PATH=${prefix}"
 
 #ENV NDKCC=$TOOLCHAIN/$TARGET$API-clang
 #ENV NDKCXX=$TOOLCHAIN/$TARGET$API-clang++
@@ -107,91 +113,115 @@ ENV LDFLAGS="-fPIC -Wl,--undefined-version"
 
 #ENV COMMON_AUTOCONF_FLAGS=--enable=static --disable=shared
 
-ENV NDK_BUILD_FLAGS=NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=/openmw-android/app/src/main/jni/Android.mk APP_PLATFORM=ANDROID_$API APP_ABI=$ABI APP_LD=deprecated LOCAL_LDFLAGS=$LDFLAGS
+ENV NDK_BUILD_FLAGS="NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=/openmw-android/app/src/main/jni/Android.mk APP_PLATFORM=ANDROID_$API APP_ABI=$ABI APP_LD=deprecated LOCAL_LDFLAGS=$LDFLAGS"
 
 #ENV LIBICU_FLAGS=--disable-tests --disable-samples --disable-icuio --disable-extras --with-cross-build=/root/build/icu-host-build --host-$TARGET
 
-ENV COMMON_CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake -DANDROID_ABI=$ABI -DANDROID_PLATFORM=ANDROID_$API -DANDROID_STL=c++_shared -DANDROID_LD=deprecated -DANDROID_CPP_FEATURES=rtti\ -exceptions -DCMAKE_BUILD_TYPE=debug -DCMAKE_DEBUG_POSTFIX=
+ENV COMMON_CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake -DANDROID_ABI=$ABI -DANDROID_PLATFORM=ANDROID_$API -DANDROID_STL=c++_shared -DANDROID_LD=deprecated -DANDROID_CPP_FEATURES=rtti\ -exceptions -DCMAKE_BUILD_TYPE=debug -DCMAKE_DEBUG_POSTFIX="
+
+# Setup LIBJPEG_TURBO_VERSION
+RUN mkdir -p $HOME/build/libjpeg-turbo && git clone --depth 1 --branch $LIBJPEG_TURBO_VERSION https://github.com/libjpeg-turbo/libjpeg-turbo/ $HOME/build/libjpeg-turbo
+# RUN cd $HOME/build/libjpeg-turbo/ && ./configure --enable-static --disable-shared --without-simd && make PROGRAMS= && make install-libLTLIBRARIES install-data-am
+
+# Setup LIBPNG_VERSION
+RUN mkdir -p $HOME/build/libpng && git clone --depth 1 --branch v$LIBPNG_VERSION https://github.com/glennrp/libpng/ $HOME/build/libpng
+#RUN cd $HOME/build/libpng && ./configure  --host-$TARGET && make check_PROGRAMS= bin_PROGRAMS= && make install check_PROGRAMS= bin_PROGRAMS=
 
 # Setup LIBICU
 RUN mkdir -p $HOME/build/icu-prefix && cd $_ && unzip $HOME/downloads/release-$LIBICU_VERSION.zip && $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/configure --enable-static --disable-shared --disable-tests --disable-samples --disable-icuio --disable-extras --with-cross-build=/root/build/icu-host-build --host=$TARGET
-
-# Setup ZLIB_VERSION
-ADD https://github.com/madler/zlib/releases/download/v1.3/zlib-1.3.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/zlib-1.3.tar.gz -C /root/build/ && mkdir -p /root/build/zlib-1.3/build && cd $_ && cmake ../ $COMMON_CMAKE_ARGS
-
-# Setup LIBPNG_VERSION
-ADD http://prdownloads.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.gz /root/downloads/
-#RUN tar xvzf /root/downloads/libpng-$LIBPNG_VERSION.tar.gz /root/build/
-
-# Setup LIBJPEG_TURBO_VERSION
-RUN cd /root/build/ && git clone https://github.com/Duron27/libjpeg-turbo && mkdir -p /root/build/libjpeg-turbo/build && cd $_
+# RUN cd $HOME/downloads/icu-release-$LIBICU_VERSION/icu4c/source/ && make check_PROGRAMS= bin_PROGRAMS= && make install check_PROGRAMS= bin_PROGRAMS=
 
 # Setup FREETYPE2_VERSION
-ADD https://download.savannah.gnu.org/releases/freetype/freetype-$FREETYPE2_VERSION.tar.gz /root/downloads/
-#RUN tar xvzf /root/downloads/freetype-$FREETYPE2_VERSION.tar.gz -C /root/build/ && cd /root/build/freetype-$FREETYPE2_VERSION/ && ./configure $COMMON_CMAKE_ARGS --with-png=no && make && make install
+RUN mkdir -p $HOME/build/freetype2 && git clone --depth 1 --branch VER-$FREETYPE2_VERSION https://github.com/freetype/freetype/ $HOME/build/freetype2
+#RUN cd $HOME/build/freetype2 && ./configure --enable-static --disable-shared --with-png=no && make && make install
 
 # Setup OPENAL_VERSION
-ADD https://github.com/kcat/openal-soft/archive/$OPENAL_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/$OPENAL_VERSION.tar.gz -C /root/build/ && cd /root/build/openal-soft-$OPENAL_VERSION/build && cmake ../ $COMMON_CMAKE_ARGS -DALSOFT_EXAMPLES=OFF -DALSOFT_COMMON_CMAKE_ARGSS=OFF -DALSOFT_UTILS=OFF -DALSOFT_NO_CONFIG_UTIL=ON -DALSOFT_BACKEND_OPENSL=ON -DALSOFT_BACKEND_WAVE=OFF
+RUN mkdir -p $HOME/build/openal && git clone --depth 1 --branch $OPENAL_VERSION https://github.com/kcat/openal-soft/ $HOME/build/openal
+#RUN cmake ../ $COMMON_CMAKE_ARGS -DALSOFT_EXAMPLES=OFF -DALSOFT_COMMON_CMAKE_ARGSS=OFF -DALSOFT_UTILS=OFF -DALSOFT_NO_CONFIG_UTIL=ON -DALSOFT_BACKEND_OPENSL=ON -DALSOFT_BACKEND_WAVE=OFF
 #RUN cd /root/build/openal-soft-$OPENAL_VERSION/build && make && make install
 
-#ARG BOOST_FLAGS=-j4 --with-filesystem --with-program_options --with-system --with-iostreams --with-regex --ignore-site-config toolset=clang architecture=${BOOST_ARCH} address-model=${BOOST_ADDRESS_MODEL} cflags=$ENV{CFLAGS} cxxflags=$ENV{CXXFLAGS} variant=release target-os=android threading=multi threadapi=pthread link=static runtime-link=static install COMMAND llvm-ranlib ${prefix}/lib/libboost_filesystem.a COMMAND llvm-ranlib ${prefix}/lib/libboost_program_options.a COMMAND llvm-ranlib ${prefix}/lib/libboost_system.a COMMAND llvm-ranlib ${prefix}/lib/libboost_iostreams.a COMMAND llvm-ranlib ${prefix}/lib/libboost_regex.a
+# Setup ZLIB_VERSION
+RUN mkdir -p $HOME/build/zlib && git clone --depth 1 --branch v1.3 https://github.com/madler/zlib/ $HOME/build/zlib
+#ADD https://github.com/madler/zlib/releases/download/v1.3/zlib-1.3.tar.gz /root/downloads/
+#RUN tar xvzf /root/downloads/zlib-1.3.tar.gz -C /root/build/ && mkdir -p /root/build/zlib-1.3/build && cd $_ && cmake ../ $COMMON_CMAKE_ARGS
+
+ENV BOOST_FLAGS="-j4 --with-filesystem --with-program_options --with-system --with-iostreams --with-regex --ignore-site-config toolset=clang architecture=arm address-model=64 cflags=$ENV{CFLAGS} cxxflags=$ENV{CXXFLAGS} variant=release target-os=android threading=multi threadapi=pthread link=static runtime-link=static install COMMAND llvm-ranlib ${prefix}/lib/libboost_filesystem.a COMMAND llvm-ranlib ${prefix}/lib/libboost_program_options.a COMMAND llvm-ranlib ${prefix}/lib/libboost_system.a COMMAND llvm-ranlib ${prefix}/lib/libboost_iostreams.a COMMAND llvm-ranlib ${prefix}/lib/libboost_regex.a"
 
 # Setup BOOST_VERSION
-ADD https://github.com/boostorg/boost/releases/download/boost-$BOOST_VERSION/boost-$BOOST_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/boost-$BOOST_VERSION.tar.gz -C /root/build/ && cd /root/build/boost-$BOOST_VERSION
-#RUN ./bootstrap.sh && ./b2 -j4 --with-filesystem --with-program_options --with-system --with-iostreams --with-regex --ignore-site-config toolset=clang architecture=${BOOST_ARCH} address-model=${BOOST_ADDRESS_MODEL} cflags=$ENV{CFLAGS} cxxflags=$ENV{CXXFLAGS} variant=release target-os=android threading=multi threadapi=pthread link=static runtime-link=static install COMMAND llvm-ranlib ${prefix}/lib/libboost_filesystem.a COMMAND llvm-ranlib ${prefix}/lib/libboost_program_options.a COMMAND llvm-ranlib ${prefix}/lib/libboost_system.a COMMAND llvm-ranlib ${prefix}/lib/libboost_iostreams.a COMMAND llvm-ranlib ${prefix}/lib/libboost_regex.a
+RUN mkdir -p $HOME/build/boost && git clone --depth 1 --branch boost-$BOOST_VERSION https://github.com/boostorg/boost/ $HOME/build/boost
+#RUN ./bootstrap.sh && ./b2 -j4 --with-filesystem --with-program_options --with-system --with-iostreams --with-regex --ignore-site-config toolset=clang architecture=arm address-model=64 cflags=$ENV{CFLAGS} cxxflags=$ENV{CXXFLAGS} variant=release target-os=android threading=multi threadapi=pthread link=static runtime-link=static install COMMAND llvm-ranlib ${prefix}/lib/libboost_filesystem.a COMMAND llvm-ranlib ${prefix}/lib/libboost_program_options.a COMMAND llvm-ranlib ${prefix}/lib/libboost_system.a COMMAND llvm-ranlib ${prefix}/lib/libboost_iostreams.a COMMAND llvm-ranlib ${prefix}/lib/libboost_regex.a
+
+#ENV FFMPEG_FLAGS--target-os=android --enable-cross-compile --cross-prefix=llvm- --cc=$aarch64-linux-android-clang --arch=arm64 --cpu=armv8-a --enable-version3 --enable-pic --disable-everything --disable-doc --disable-programs --disable-autodetect --disable-iconv --enable-decoder=mp3 --enable-demuxer=mp3 --enable-decoder=bink --enable-decoder=binkaudio_rdft --enable-decoder=binkaudio_dct --enable-demuxer=bink --enable-demuxer=wav --enable-decoder=pcm_* --enable-decoder=vp8 --enable-decoder=vp9 --enable-decoder=opus --enable-decoder=vorbis --enable-demuxer=matroska --enable-demuxer=ogg --disable-asm --disable-optimizations
 
 # Setup FFMPEG_VERSION
-#ADD http://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.bz2 /root/downloads/
-#RUN tar xjf /root/downloads/ffmpeg-$FFMPEG_VERSION.tar.bz2 -C /root/build/
+RUN mkdir -p $HOME/build/ffmpeg && git clone --depth 1 --branch n$FFMPEG_VERSION https://github.com/FFmpeg/FFmpeg/ $HOME/build/ffmpeg
+#RUN cd $HOME/build/ffmpeg && ./configure --target-os=android --enable-cross-compile --cross-prefix=llvm- --cc=$aarch64-linux-android-clang --arch=arm64 --cpu=armv8-a --enable-version3 --enable-pic --disable-everything --disable-doc --disable-programs --disable-autodetect --disable-iconv --enable-decoder=mp3 --enable-demuxer=mp3 --enable-decoder=bink --enable-decoder=binkaudio_rdft --enable-decoder=binkaudio_dct --enable-demuxer=bink --enable-demuxer=wav --enable-decoder=pcm_* --enable-decoder=vp8 --enable-decoder=vp9 --enable-decoder=opus --enable-decoder=vorbis --enable-demuxer=matroska --enable-demuxer=ogg --disable-asm --disable-optimizations
 
 # Setup SDL2_VERSION
-ADD https://www.libsdl.org/release/SDL2-$SDL2_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/SDL2-$SDL2_VERSION.tar.gz -C /root/build/
+RUN mkdir -p $HOME/build/sdl2 && git clone --depth 1 --branch release-$SDL2_VERSION https://github.com/libsdl-org/SDL/ $HOME/build/sdl2
+#RUN cd $HOME/build/sdl2 && ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=<SOURCE_DIR>/Android.mk APP_PLATFORM=${android_platform} APP_ABI=${app_abi} APP_LD=deprecated LOCAL_LDFLAGS=$ENV{LDFLAGS} -j4
 
 # Setup BULLET_VERSION
-ADD https://github.com/bulletphysics/bullet3/archive/$BULLET_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/$BULLET_VERSION.tar.gz -C /root/build/
+RUN mkdir -p $HOME/build/bullet && git clone --depth 1 --branch $BULLET_VERSION https://github.com/bulletphysics/bullet3/ $HOME/build/bullet
+#RUN cd $HOME/build/bullet && cmake . $COMMON_CMAKE_ARGS -DBUILD_BULLET2_DEMOS=OFF -DBUILD_CPU_DEMOS=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_EXTRAS=OFF -DUSE_DOUBLE_PRECISION=ON -DBULLET2_MULTITHREADING=ON && make && make install
 
 # Setup GL4ES_VERSION
-ADD https://github.com/ptitSeb/gl4es/archive/$GL4ES_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/$GL4ES_VERSION.tar.gz -C /root/build/
+RUN mkdir -p $HOME/build/gl4es && git clone --depth 1 --branch v$GL4ES_VERSION https://github.com/ptitSeb/gl4es/ $HOME/build/gl4es
+#RUN cd $HOME/build/gl4es && ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=<SOURCE_DIR>/Android.mk APP_PLATFORM=${android_platform} APP_ABI=${app_abi} APP_LD=deprecated LOCAL_LDFLAGS=$ENV{LDFLAGS} -j4
+#RUN mkdir -p ${prefix}/lib/ && cp libs/${app_abi}/libGL.so ${prefix}/lib/ && cp -r <SOURCE_DIR>/include ${prefix}/include/gl4es/ && cp -r <SOURCE_DIR>/include ${prefix}/
 
 # Setup MYGUI_VERSION
-ADD https://github.com/MyGUI/mygui/archive/MyGUI$MYGUI_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/MyGUI$MYGUI_VERSION.tar.gz -C /root/build/
+RUN mkdir -p $HOME/build/mygui && git clone --depth 1 --branch MyGUI$MYGUI_VERSION https://github.com/MyGUI/mygui/ $HOME/build/mygui
+#RUN cd $HOME/build/mygui && cmake . $COMMON_CMAKE_ARGS -DMYGUI_RENDERSYSTEM=1 -DMYGUI_BUILD_DEMOS=OFF -DMYGUI_BUILD_TOOLS=OFF -DMYGUI_BUILD_PLUGINS=OFF -DMYGUI_DONT_USE_OBSOLETE=ON -DFREETYPE_FT2BUILD_INCLUDE_DIR=${prefix}/include/freetype2/ -DMYGUI_STATIC=ON && make && make install
 
 # Setup LZ4_VERSION
-ADD https://github.com/lz4/lz4/archive/v$LZ4_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/v$LZ4_VERSION.tar.gz -C /root/build/ && cd $HOME/build/lz4-$LZ4_VERSION && cmake build/cmake -DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake -DANDROID_ABI=$ABI -DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=OFF && make && make install
+RUN mkdir -p $HOME/build/lz4 && git clone --depth 1 --branch v$LZ4_VERSION https://github.com/lz4/lz4/ $HOME/build/lz4
+#RUN cd $HOME/build/lz4 && cmake . $COMMON_CMAKE_ARGS -DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=OFF && make && make install
 
-#ENV LUAJIT_MAKE_FLAGS=\
-#HOST_CC=gcc -m64 \
-#CFLAGS= \
-#TARGET_CFLAGS=$CFLAGS \
-#CROSS=llvm- \
-#STATIC_CC=$NDK_TRIPLET-clang \
-#DYNAMIC_CC=$NDK_TRIPLET-clang\ -fPIC \
-#TARGET_LD=$NDK_TRIPLET-clang
+ENV LUAJIT_MAKE_FLAGS="HOST_CC=gcc -m64 CFLAGS= TARGET_CFLAGS=$CFLAGS CROSS=llvm- STATIC_CC=$NDK_TRIPLET-clang DYNAMIC_CC=$NDK_TRIPLET-clang\ -fPIC TARGET_LD=$NDK_TRIPLET-clang"
 
 # Setup LUAJIT_VERSION
-ADD https://github.com/luaJit/LuaJIT/archive/v$LUAJIT_VERSION.tar.gz /root/downloads/
-#RUN tar xvzf /root/downloads/v$LUAJIT_VERSION.tar.gz -C /root/build/ && cd /root/build/LuaJIT-$LUAJIT_VERSION && make amalg HOST_CC=gcc -m64 CFLAGS= TARGET_CFLAGS=$CFLAGS CROSS=llvm- STATIC_CC=$NDK_TRIPLET-clang DYNAMIC_CC=$NDK_TRIPLET-clang -fPIC TARGET_LD=$NDK_TRIPLET-clang
+RUN mkdir -p $HOME/build/luajit && git clone --depth 1 --branch v$LUAJIT_VERSION https://github.com/LuaJIT/LuaJIT/ $HOME/build/luajit
+#RUN cd $HOME/build/luajit && make amalg HOST_CC=${LUAJIT_HOST_CC} CFLAGS= TARGET_CFLAGS=$ENV{CFLAGS} CROSS=llvm- STATIC_CC=${host}-clang DYNAMIC_CC=${host}-clang\ -fPIC TARGET_LD=${host}-clang PREFIX=${prefix}
+#RUN cd $HOME/build/luajit && make install HOST_CC=${LUAJIT_HOST_CC} CFLAGS= TARGET_CFLAGS=$ENV{CFLAGS} CROSS=llvm- STATIC_CC=${host}-clang DYNAMIC_CC=${host}-clang\ -fPIC TARGET_LD=${host}-clang PREFIX=${prefix}
+#RUN bash -c "rm ${prefix}/lib/libluajit*.so*"
 
 # Setup LIBXML_VERSION
-ADD https://github.com/GNOME/libxml2/archive/refs/tags/v2.12.2.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/v2.12.2.tar.gz -C /root/build/
+RUN mkdir -p $HOME/build/libxml && git clone --depth 1 --branch v2.12.2 https://github.com/GNOME/libxml2/ $HOME/build/libxml
+#RUN cd $HOME/build/libxml && cmake . $COMMON_CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF -DLIBXML2_WITH_CATALOG=OFF -DLIBXML2_WITH_ICONV=OFF -DLIBXML2_WITH_LZMA=OFF -DLIBXML2_WITH_PROGRAMS=OFF -DLIBXML2_WITH_PYTHON=OFF -DLIBXML2_WITH_TESTS=OFF -DLIBXML2_WITH_ZLIB=ON
+#RUN make && make install
 
 # Setup LIBCOLLADA_VERSION
-ADD https://github.com/rdiankov/collada-dom/archive/v2.5.0.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/v2.5.0.tar.gz -C /root/build/
+RUN mkdir -p $HOME/build/collada-dom && git clone --depth 1 --branch v2.5.0 https://github.com/rdiankov/collada-dom/ $HOME/build/collada-dom
+#RUN cd $HOME/build/collada-dom && cmake . $COMMON_CMAKE_ARGS -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_STATIC_RUNTIME=ON -DBoost_NO_SYSTEM_PATHS=ON -DBoost_INCLUDE_DIR=${prefix}/include -DHAVE_STRTOQ=0 -DUSE_FILE32API=1 -DCMAKE_CXX_FLAGS=-std=gnu++11\ -I${prefix}/include/\ $ENV{CXXFLAGS}
+#RUN make && make install
 
 # Setup OPENSCENEGRAPH_VERSION
-ADD https://github.com/openmw/osg/archive/$OSG_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/$OSG_VERSION.tar.gz -C /root/build/
+RUN mkdir -p $HOME/build/osg && git clone --depth 1 --branch OpenSceneGraph-$OSG_VERSION https://github.com/openmw/osg/ $HOME/build/osg
+#RUN cd $HOME/build/osg && cmake . $COMMON_CMAKE_ARGS -DOPENGL_PROFILE="GL1" -DDYNAMIC_OPENTHREADS=OFF -DDYNAMIC_OPENSCENEGRAPH=OFF -DBUILD_OSG_PLUGIN_OSG=ON -DBUILD_OSG_PLUGIN_DAE=ON -DBUILD_OSG_PLUGIN_DDS=ON -DBUILD_OSG_PLUGIN_TGA=ON -DBUILD_OSG_PLUGIN_BMP=ON -DBUILD_OSG_PLUGIN_JPEG=ON -DBUILD_OSG_PLUGIN_PNG=ON -DBUILD_OSG_PLUGIN_FREETYPE=ON -DJPEG_INCLUDE_DIR=${prefix}/include/ -DPNG_INCLUDE_DIR=${prefix}/include/ -DFREETYPE_DIR=${prefix} -DCOLLADA_INCLUDE_DIR=${prefix}/include/collada-dom2.5 -DCOLLADA_DIR=${prefix}/include/collada-dom2.5/1.4 -DOSG_CPP_EXCEPTIONS_AVAILABLE=TRUE -DOSG_GL1_AVAILABLE=ON -DOSG_GL2_AVAILABLE=OFF -DOSG_GL3_AVAILABLE=OFF -DOSG_GLES1_AVAILABLE=OFF -DOSG_GLES2_AVAILABLE=OFF -DOSG_GL_LIBRARY_STATIC=OFF -DOSG_GL_DISPLAYLISTS_AVAILABLE=OFF -DOSG_GL_MATRICES_AVAILABLE=ON -DOSG_GL_VERTEX_FUNCS_AVAILABLE=ON -DOSG_GL_VERTEX_ARRAY_FUNCS_AVAILABLE=ON -DOSG_GL_FIXED_FUNCTION_AVAILABLE=ON -DBUILD_OSG_APPLICATIONS=OFF -DBUILD_OSG_PLUGINS_BY_DEFAULT=OFF -DBUILD_OSG_DEPRECATED_SERIALIZERS=OFF -DCMAKE_CXX_FLAGS=-std=gnu++11\ -I${prefix}/include/\ $ENV{CXXFLAGS}
+#RUN make && make install
 
 # Setup OPENMW_VERSION
-ADD https://github.com/OpenMW/openmw/archive/$OPENMW_VERSION.tar.gz /root/downloads/
-RUN tar xvzf /root/downloads/$OPENMW_VERSION.tar.gz -C /root/build/
+#RUN git clone --depth 1 --branch $OPENMW_VERSION https://github.com/OpenMW/openmw/
+RUN mkdir -p $HOME/build/openmw && git clone http://github.com/openmw/openmw/ $HOME/build/openmw
+#RUN cd $HOME/build/openmw && cmake . $COMMON_CMAKE_ARGS -DBUILD_BSATOOL=0 -DBUILD_NIFTEST=0 -DBUILD_ESMTOOL=0 -DBUILD_LAUNCHER=0 -DBUILD_MWINIIMPORTER=0 -DBUILD_ESSIMPORTER=0 -DBUILD_OPENCS=0 -DBUILD_NAVMESHTOOL=0 -DBUILD_WIZARD=0 -DBUILD_MYGUI_PLUGIN=0 -DBUILD_BULLETOBJECTTOOL=0 -DOPENMW_USE_SYSTEM_SQLITE3=OFF -DOPENMW_USE_SYSTEM_YAML_CPP=OFF -DOPENMW_USE_SYSTEM_ICU=ON -DOPENAL_INCLUDE_DIR=${prefix}/include/AL/ -DBullet_INCLUDE_DIR=${prefix}/include/bullet/ -DOSG_STATIC=TRUE -DMyGUI_LIBRARY=${prefix}/lib/libMyGUIEngineStatic.a
+#RUN make
+
+#Just download the archive
+#RUN mkdir -p $HOME/build/icu-prefix && cd $_ && unzip $HOME/downloads/release-$LIBICU_VERSION.zip
+#ADD https://github.com/madler/zlib/releases/download/v1.3/zlib-1.3.tar.gz /root/downloads/ && tar xvzf /root/downloads/zlib-1.3.tar.gz -C /root/build/
+#ADD http://prdownloads.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.gz /root/downloads/ && tar xvzf /root/downloads/libpng-$LIBPNG_VERSION.tar.gz /root/build/
+#ADD https://download.savannah.gnu.org/releases/freetype/freetype-$FREETYPE2_VERSION.tar.gz /root/downloads/ && tar xvzf /root/downloads/freetype-$FREETYPE2_VERSION.tar.gz -C /root/build/
+#ADD https://github.com/kcat/openal-soft/archive/$OPENAL_VERSION.tar.gz /root/downloads/ && tar xvzf /root/downloads/$OPENAL_VERSION.tar.gz -C /root/build/
+#ADD https://github.com/boostorg/boost/releases/download/boost-$BOOST_VERSION/boost-$BOOST_VERSION.tar.gz /root/downloads/ && tar xvzf /root/downloads/boost-$BOOST_VERSION.tar.gz -C /root/build/
+#ADD http://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.bz2 /root/downloads/ && tar xjf /root/downloads/ffmpeg-$FFMPEG_VERSION.tar.bz2 -C /root/build/
+#ADD https://www.libsdl.org/release/SDL2-$SDL2_VERSION.tar.gz /root/downloads/ && tar xvzf /root/downloads/SDL2-$SDL2_VERSION.tar.gz -C /root/build/
+#ADD https://github.com/bulletphysics/bullet3/archive/$BULLET_VERSION.tar.gz /root/downloads/ && tar xvzf /root/downloads/$BULLET_VERSION.tar.gz -C /root/build/
+#ADD https://github.com/ptitSeb/gl4es/archive/$GL4ES_VERSION.tar.gz /root/downloads/ && tar xvzf /root/downloads/$GL4ES_VERSION.tar.gz -C /root/build/
+#ADD https://github.com/MyGUI/mygui/archive/MyGUI$MYGUI_VERSION.tar.gz /root/downloads/ && tar xvzf /root/downloads/MyGUI$MYGUI_VERSION.tar.gz -C /root/build/
+#ADD https://github.com/lz4/lz4/archive/v$LZ4_VERSION.tar.gz /root/downloads/ && tar xvzf /root/downloads/v$LZ4_VERSION.tar.gz -C /root/build/
+#ADD https://github.com/luaJit/LuaJIT/archive/v$LUAJIT_VERSION.tar.gz /root/downloads/ && tar xvzf /root/downloads/v$LUAJIT_VERSION.tar.gz -C /root/build/
+#ADD https://github.com/GNOME/libxml2/archive/refs/tags/v2.12.2.tar.gz /root/downloads/ && tar xvzf /root/downloads/v2.12.2.tar.gz -C /root/build/
+#ADD https://github.com/rdiankov/collada-dom/archive/v2.5.0.tar.gz /root/downloads/ && tar xvzf /root/downloads/v2.5.0.tar.gz -C /root/build/
+#ADD https://github.com/openmw/osg/archive/$OSG_VERSION.tar.gz /root/downloads/ && tar xvzf /root/downloads/$OSG_VERSION.tar.gz -C /root/build/
+#ADD https://github.com/OpenMW/openmw/archive/$OPENMW_VERSION.tar.gz /root/downloads/ && tar xvzf /root/downloads/$OPENMW_VERSION.tar.gz -C /root/build/
