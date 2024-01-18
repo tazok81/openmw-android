@@ -190,8 +190,8 @@ ENV OPENAL_FLAGS="\
 -DALSOFT_BACKEND_WAVE=OFF"
 
 # Setup OPENAL_VERSION
-RUN wget -c https://github.com/kcat/openal-soft/archive/$OPENAL_VERSION.tar.gz -O - | tar -xz -C $HOME/build/
-RUN cd cd /root/build/openal-soft-$OPENAL_VERSION && cmake ../ $COMMON_CMAKE_ARGS $OPENAL_FLAGS && make && make install
+#RUN wget -c https://github.com/kcat/openal-soft/archive/$OPENAL_VERSION.tar.gz -O - | tar -xz -C $HOME/build/
+#RUN cd cd /root/build/openal-soft-$OPENAL_VERSION && cmake ../ $COMMON_CMAKE_ARGS $OPENAL_FLAGS && make && make install
 
 #RUN mkdir -p $HOME/build/openal && git clone --depth 1 --branch $OPENAL_VERSION https://github.com/kcat/openal-soft/ $HOME/build/openal
 #RUN cmake ../ $COMMON_CMAKE_ARGS $OPENAL_FLAGS
