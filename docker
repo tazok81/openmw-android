@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:labs
 FROM fedora:39
 
+#Set build type : release, debug
+ENV BUILD_TYPE=debug
 # NDK Clang settings start at line 71
 
 # App versions - change settings here
@@ -23,9 +25,13 @@ ENV NDK_VERSION=26.1.10909125
 ENV SDK_CMDLINE_TOOLS=10406996_latest
 ENV PLATFORM_TOOLS_VERSION=29.0.0
 ENV JAVA_VERSION=17
-
 # Android API Settings
 ENV API=21
+
+# Global C, CXX and LDFLAGS
+ENV CFLAGS="-fPIC -O3"
+ENV CXXFLAGS="-fPIC -frtti -fexceptions -O3"
+ENV LDFLAGS="-fPIC -Wl,--undefined-version"
 
 RUN dnf install -y copr-cli dnf-plugins-core && dnf copr enable -y dturner/OpenMW-Deps
 RUN dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
@@ -45,6 +51,8 @@ COPY --chmod=0755 openmw-android /openmw-android
 ENV PATH=$PATH:~/Android/cmdline-tools/latest/bin/
 ENV PATH=$PATH:~/Android/platform-tools/
 ENV PATH=$PATH:~/Android/ndk/$NDK_VERSION/
+
+ENV prefix=${CMAKE_INSTALL_PREFIX}
 
 # Setup ICU
 RUN set -e && mkdir -p $HOME/downloads/ && cd $_ && wget https://github.com/unicode-org/icu/archive/refs/tags/release-$LIBICU_VERSION.zip && unzip release-$LIBICU_VERSION.zip
@@ -87,21 +95,17 @@ RUN rm -f $TOOLCHAIN/$NDK_TRIPLET-g++
 RUN ln -s $NDK_TRIPLET$API-clang /$TOOLCHAIN/$NDK_TRIPLET-gcc
 RUN ln -s $NDK_TRIPLET$API-clang++ /$TOOLCHAIN/$NDK_TRIPLET-g++
 
-# Global C, CXX and LDFLAGS
-ENV CFLAGS="-fPIC -O3"
-ENV CXXFLAGS="-fPIC -frtti -fexceptions -O3"
-ENV LDFLAGS="-fPIC -Wl,--undefined-version"
 
 ENV COMMON_CMAKE_ARGS="\
--DCMAKE_TOOLCHAIN_FILE=${CMAKE_SOURCE_DIR}/toolchain/ndk/build/cmake/android.toolchain.cmake \
--DANDROID_ABI=${app_abi} \
--DANDROID_PLATFORM=${android_platform} \
+-DCMAKE_TOOLCHAIN_FILE=/root/Android/ndk/$NDK_VERSION/build/cmake/android.toolchain.cmake \
+-DANDROID_ABI=$ABI \
+-DANDROID_PLATFORM=android-$API \
 -DANDROID_STL=c++_shared \
 -DANDROID_CPP_FEATURES=rtti\ exceptions \
 -DCMAKE_C_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/include/\ $ENV{CFLAGS} \
 -DCMAKE_CXX_FLAGS=-DMYGUI_DONT_REPLACE_NULLPTR\ -I${prefix}/include/\ $ENV{CXXFLAGS} \
 -DCMAKE_SHARED_LINKER_FLAGS=$ENV{LDFLAGS} \
--DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+-DCMAKE_BUILD_TYPE=$BUILD_TYPE \
 -DCMAKE_DEBUG_POSTFIX= \
 -DCMAKE_INSTALL_PREFIX=${prefix} \
 -DCMAKE_FIND_ROOT_PATH=${prefix}"
@@ -128,7 +132,8 @@ TARGET_CFLAGS=$CFLAGS \
 CROSS=llvm- \
 STATIC_CC=$NDK_TRIPLET-clang \
 DYNAMIC_CC=$NDK_TRIPLET-clang\ -fPIC \
-TARGET_LD=$NDK_TRIPLET-clang"
+TARGET_LD=$NDK_TRIPLET-clang \
+--prefix=${prefix}"
 
 # Setup LIBJPEG_TURBO_VERSION
 #RUN mkdir -p $HOME/build/libjpeg-turbo && git clone --depth 1 --branch $LIBJPEG_TURBO_VERSION https://github.com/libjpeg-turbo/libjpeg-turbo/ $HOME/build/libjpeg-turbo
@@ -199,7 +204,7 @@ COMMAND llvm-ranlib ${prefix}/lib/libboost_regex.a"
 
 # Setup BOOST_VERSION
 #RUN mkdir -p $HOME/build/boost && git clone --depth 1 --branch boost-$BOOST_VERSION https://github.com/boostorg/boost/ $HOME/build/boost
-#RUN ./bootstrap.sh && ./b2 $BOOST_FLAGS
+#RUN ./bootstrap.sh --prefix=${prefix} && ./b2 $BOOST_FLAGS
 
 ENV FFMPEG_FLAGS="--disable-asm \
 --disable-optimizations \
