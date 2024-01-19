@@ -169,7 +169,7 @@ ExternalProject_Add(libicu
 )
 
 ExternalProject_Add(libpng
-	URL http://prdownloads.sourceforge.net/libpng/libpng-${LIBPNG_VERSION}.tar.xz/downloads
+	URL http://prdownloads.sourceforge.net/libpng/libpng-${LIBPNG_VERSION}.tar.xz
 	URL_HASH ${LIBPNG_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
