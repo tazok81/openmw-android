@@ -423,6 +423,8 @@ ExternalProject_Add(zlib
 	URL_HASH SHA256=ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e
 	DOWNLOAD_DIR ${download_dir}
 
+        PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/zliblld.patch
+
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
 
