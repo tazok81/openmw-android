@@ -430,6 +430,7 @@ ExternalProject_Add(zlib
         INSTALL_COMMAND ${wrapper_command} $(MAKE) install
 )
 
+
 ExternalProject_Add(libxml
 	DEPENDS zlib
 
@@ -452,6 +453,7 @@ ExternalProject_Add(libxml
 
 	INSTALL_COMMAND ${wrapper_command} $(MAKE) install
 )
+
 
 set(LIBCOLLADA_PATCH patch -d <SOURCE_DIR> -p0 -t -N < ${CMAKE_SOURCE_DIR}/patches/libcollada-minizip-fix.patch)
 
