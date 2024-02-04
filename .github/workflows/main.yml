@@ -32,7 +32,10 @@ jobs:
 
    - name: Build static libraries
       run: |
-        cd buildscripts/prefix/lib && zip boost.zip libboost_*.a && mv boost.zip && echo boost.zip >> $GITHUB_ENV
+        cd buildscripts/prefix/lib 
+        zip boost.zip libboost_*.a 
+        mv boost.zip /
+        echo boost.zip >> $GITHUB_ENV
        
     - name: Build the APK
       run: |
