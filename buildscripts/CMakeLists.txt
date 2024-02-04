@@ -473,7 +473,7 @@ ExternalProject_Add(libcollada
 	-DBoost_NO_SYSTEM_PATHS=ON
 	-DBoost_INCLUDE_DIR=${prefix}/include
 	-DHAVE_STRTOQ=0
-	-DUSE_FILE32API=1
+	#-DUSE_FILE32API=1
 	-DCMAKE_CXX_FLAGS=-std=gnu++11\ -I${prefix}/include/\ $ENV{CXXFLAGS}
 
 	BUILD_COMMAND ${wrapper_command} $(MAKE)
