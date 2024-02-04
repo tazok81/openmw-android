@@ -30,13 +30,6 @@ jobs:
         cd buildscripts
         ./build.sh --arch ${{ matrix.arch }}
 
-   - name: Build static libraries
-      run: |
-        cd buildscripts/prefix/lib 
-        zip boost.zip libboost_*.a 
-        mv boost.zip /
-        echo boost.zip >> $GITHUB_ENV
-       
     - name: Build the APK
       run: |
         ARCH=${{ matrix.arch }} source buildscripts/include/version.sh
@@ -63,8 +56,3 @@ jobs:
         name: ${{ env.apk_file }}
         path: ${{ env.apk_file }}.apk
   
-    - name: Upload boost library
-      uses: actions/upload-artifact@v3
-      with:
-        name: boost.zip
-        path: boost.zip
