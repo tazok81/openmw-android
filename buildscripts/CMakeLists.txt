@@ -299,8 +299,6 @@ ExternalProject_Add(sdl2
 	URL_HASH ${SDL2_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
-        #PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/sdl2-android-120hz-gyroscope.patch
-        #COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/sdl2-disable-gamma-warning.patch
 
 	CONFIGURE_COMMAND ""
 
@@ -317,7 +315,7 @@ ExternalProject_Add(bullet
 	URL_HASH ${BULLET_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
-        PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/bullet-fix-cmake.patch
+	PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/bullet-fix-cmake.patch
 	
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
@@ -355,9 +353,8 @@ ExternalProject_Add(mygui
 	URL https://github.com/MyGUI/mygui/archive/MyGUI${MYGUI_VERSION}.tar.gz
 	URL_HASH ${MYGUI_HASH}
 	DOWNLOAD_DIR ${download_dir}
-	
-        
-        PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/mygui-dont-set-debug-postfix.patch
+
+        #PATCH_COMMAND patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/mygui-dont-set-debug-postfix.patch
 
 	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
 	${COMMON_CMAKE_ARGS}
@@ -403,7 +400,7 @@ set(LUAJIT_MAKE_FLAGS
 
 ExternalProject_Add(luajit
 	URL https://github.com/luaJit/LuaJIT/archive/${LUAJIT_VERSION}.tar.gz
-        URL_HASH ${LUAJIT_HASH}
+#	URL_HASH ${LUAJIT_HASH}
 	DOWNLOAD_DIR ${download_dir}
 
 	BUILD_IN_SOURCE 1
@@ -419,17 +416,16 @@ ExternalProject_Add(luajit
 )
 
 ExternalProject_Add(zlib
-        URL https://github.com/madler/zlib/archive/refs/tags/v1.2.11.tar.gz
-        URL_HASH SHA256=629380c90a77b964d896ed37163f5c3a34f6e6d897311f1df2a7016355c45eff
-        DOWNLOAD_DIR ${download_dir}
+	URL https://github.com/madler/zlib/archive/refs/tags/v1.2.11.tar.gz
+	URL_HASH SHA256=629380c90a77b964d896ed37163f5c3a34f6e6d897311f1df2a7016355c45eff
+	DOWNLOAD_DIR ${download_dir}
 
-        CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
-        ${COMMON_CMAKE_ARGS}
+	CONFIGURE_COMMAND ${wrapper_command} cmake <SOURCE_DIR>
+	${COMMON_CMAKE_ARGS}
 
-        BUILD_COMMAND ${wrapper_command} $(MAKE)
-        INSTALL_COMMAND ${wrapper_command} $(MAKE) install
+	BUILD_COMMAND ${wrapper_command} $(MAKE)
+	INSTALL_COMMAND ${wrapper_command} $(MAKE) install
 )
-
 
 ExternalProject_Add(libxml
 	DEPENDS zlib
@@ -453,7 +449,6 @@ ExternalProject_Add(libxml
 
 	INSTALL_COMMAND ${wrapper_command} $(MAKE) install
 )
-
 
 set(LIBCOLLADA_PATCH patch -d <SOURCE_DIR> -p0 -t -N < ${CMAKE_SOURCE_DIR}/patches/libcollada-minizip-fix.patch)
 
@@ -496,8 +491,8 @@ set(OSG_COMMON
 	-DJPEG_INCLUDE_DIR=${prefix}/include/
 	-DPNG_INCLUDE_DIR=${prefix}/include/
 	-DFREETYPE_DIR=${prefix}
-    -DCOLLADA_INCLUDE_DIR=${prefix}/include/collada-dom2.5
-    -DCOLLADA_DIR=${prefix}/include/collada-dom2.5/1.4
+	-DCOLLADA_INCLUDE_DIR=${prefix}/include/collada-dom2.5
+	-DCOLLADA_DIR=${prefix}/include/collada-dom2.5/1.4
 	-DOSG_CPP_EXCEPTIONS_AVAILABLE=TRUE
 	-DOSG_GL1_AVAILABLE=ON
 	-DOSG_GL2_AVAILABLE=OFF
@@ -519,17 +514,17 @@ set(OSG_COMMON
 )
 
 set(OSG_PATCH
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/disable-polygon-offset.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-lib-prefix-from-plugins.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/fix-freetype-include-dirs.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0001-Replace-Atomic-impl-with-std-atomic.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0002-BufferObject-make-numClients-atomic.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0004-IncrementalCompileOperation-wrap-some-stuff-in-atomi.patch &&
-        #patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-zlib-dependency.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/force-add-plugins.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/dae_collada.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/psa.patch &&
-        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/disable-polygon-offset.patch &&
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-lib-prefix-from-plugins.patch &&
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/fix-freetype-include-dirs.patch &&
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0001-Replace-Atomic-impl-with-std-atomic.patch &&
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0002-BufferObject-make-numClients-atomic.patch &&
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0004-IncrementalCompileOperation-wrap-some-stuff-in-atomi.patch &&
+	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/remove-zlib-dependency.patch &&
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/force-add-plugins.patch &&
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/dae_collada.patch &&
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/psa.patch &&
+	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/osg/0005-CullSettings-make-inheritanceMask-atomic-to-silence-.patch
 )
 
 ExternalProject_Add(osg
@@ -551,7 +546,6 @@ ExternalProject_Add(osg
 	INSTALL_COMMAND mkdir -p <SOURCE_DIR>/3rdparty/build/libpng <SOURCE_DIR>/3rdparty/build/libjpeg <SOURCE_DIR>/3rdparty/build/freetype
 	COMMAND $(MAKE) install
 )
-
 
 set(OPENMW_COMMON
 	-DBUILD_BSATOOL=0
@@ -582,16 +576,11 @@ set(OPENMW_COMMON
 )
 
 set(OPENMW_PATCH
-	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/gamma.patch &&
-    patch -d <SOURCE_DIR> -p1 -t -N -R < ${CMAKE_SOURCE_DIR}/patches/openmw/sdlfix.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/cmakefix.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0001-loadingscreen-disable-for-now.patch &&
-    patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0009-windowmanagerimp-always-show-mouse-when-possible-pat.patch &&
-    patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0010-android-fix-context-being-lost-on-app-minimize.patch &&
-	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0012-components-misc-stringops-use-boost-format-instead-o.patch &&
-	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/fix-build.patch &&
-    patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/psa.patch &&
-	#patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/refraction-fix.patch &&
+        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0001-loadingscreen-disable-for-now.patch &&
+        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0009-windowmanagerimp-always-show-mouse-when-possible-pat.patch &&
+        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0010-android-fix-context-being-lost-on-app-minimize.patch &&
+        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/fix-build.patch &&
+        patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/psa.patch &&
 	cp ${CMAKE_SOURCE_DIR}/patches/openmw/android_main.cpp <SOURCE_DIR>/apps/openmw/android_main.cpp
 )
 
