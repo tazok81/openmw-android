@@ -36,9 +36,9 @@ set(BULLET_HASH SHA256=baa642c906576d4d98d041d0acb80d85dd6eff6e3c16a009b1abf1ccd
 set(MYGUI_VERSION 3.4.3)
 set(MYGUI_HASH SHA256=33c91b531993047e77cace36d6fea73634b8c17bd0ed193d4cd12ac7c6328abd)
 
-# https://github.com/ptitSeb/gl4es/releases
+# https://github.com/sisah2/gl4es/releases
 set(GL4ES_VERSION 5ac069d82ad8ca2cc3c574484e4c5bad880db83e)
-set(GL4ES_HASH SHA256=60ee788c2b43a5a25cd1a8a0071a77e957f2d5ff070eda5c39eb120d1ad2c3ea)
+set(GL4ES_HASH SHA256=b565e717c7d192e936bda25f3cb90ad8db398af56414ec08294b6716574c1a6d)
 
 # https://github.com/openscenegraph/OpenSceneGraph/releases
 set(OSG_VERSION 69cfecebfb6dc703b42e8de39eed750a84a87489)
@@ -331,12 +331,11 @@ ExternalProject_Add(bullet
 	INSTALL_COMMAND $(MAKE) install
 )
 
-ExternalProject_Add(gl4es
-        URL https://github.com/ptitSeb/gl4es/archive/${GL4ES_VERSION}.tar.gz
-        URL_HASH ${GL4ES_HASH}
-        DOWNLOAD_DIR ${download_dir}
 
-        CONFIGURE_COMMAND ""
+ExternalProject_Add(gl4es
+        URL https://github.com/sisah2/gl4es/archive/${GL4ES_VERSION}.tar.gz
+        #URL_HASH ${GL4ES_HASH}
+        DOWNLOAD_DIR ${download_dir}
 
         BUILD_COMMAND ${wrapper_command} ndk-build
         ${COMMON_NDK_BUILD_FLAGS}
