@@ -53,7 +53,7 @@ set(LUAJIT_VERSION v2.1.0-beta3)
 set(LUAJIT_HASH SHA256=409f7fe570d3c16558e594421c47bdd130238323c9d6fd6c83dedd2aaeb082a8)
 
 # https://github.com/OpenMW/openmw/commits/master
-set(OPENMW_VERSION 19a6fd4e1be0b9928940a575f00d31b5af76beb5)
+set(OPENMW_VERSION c1b9beb7632a324e7fb7569b288678a4e5f26549)
 set(OPENMW_HASH SHA256=0939845b23de466e90401ba47a8d4d55d9ca7061118867c1f316adaccd4a0eaa)
 
 # https://github.com/unicode-org/icu/
@@ -576,6 +576,7 @@ set(OPENMW_COMMON
 
 set(OPENMW_PATCH
 	patch -d <SOURCE_DIR> -p1 -t -N -R < ${CMAKE_SOURCE_DIR}/patches/openmw/sdlfix.patch &&
+ 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/shaders.patch &&
 	patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/cmakefix.patch &&
         patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0001-loadingscreen-disable-for-now.patch &&
         patch -d <SOURCE_DIR> -p1 -t -N < ${CMAKE_SOURCE_DIR}/patches/openmw/0009-windowmanagerimp-always-show-mouse-when-possible-pat.patch &&
